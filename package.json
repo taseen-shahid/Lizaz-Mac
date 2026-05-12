@@ -5,9 +5,10 @@
   "author": "",
   "main": "main.js",
   "scripts": {
-    "start": "electron .",
-    "build": "npx electron-builder --win"
-  },
+  "start": "electron .",
+  "build": "electron-builder",
+  "build-mac": "electron-builder --mac dmg"
+},
   "devDependencies": {
     "electron": "^26.0.0",
     "electron-builder": "^24.6.0"
