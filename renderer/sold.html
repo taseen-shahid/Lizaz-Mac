@@ -835,21 +835,81 @@
       }
     }
     .insurance-agent-select {
-  padding: 4px 8px;
-  font-size: 12px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  background: white;
-  width: 180px;
-  max-width: 100%;
-  cursor: pointer;
-}
+      padding: 4px 8px;
+      font-size: 12px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      background: white;
+      width: 180px;
+      max-width: 100%;
+      cursor: pointer;
+    }
 
-.insurance-agent-select:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
-}
+    .insurance-agent-select:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+    }
+
+    /* Editable remarks field styling */
+    .remarks-field-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #fff9e6;
+      padding: 4px 10px;
+      border-radius: 6px;
+      border-left: 3px solid #ffc107;
+      margin-top: 8px;
+    }
+    
+    .remarks-field-wrapper b {
+      color: #856404;
+      flex-shrink: 0;
+    }
+    
+    .editable-field-inline {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      flex: 2;
+    }
+    
+    .remarks-input {
+      border: 1px solid #cbd5e1;
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 12px;
+      background: #fffef7;
+      min-width: 200px;
+      flex: 1;
+    }
+    
+    .remarks-input:enabled {
+      background-color: #fff8e1;
+      border-color: #ffc107;
+    }
+    
+    .edit-icon-inline {
+      cursor: pointer;
+      font-size: 14px;
+      opacity: 0.6;
+      transition: opacity 0.2s;
+    }
+    
+    .edit-icon-inline:hover {
+      opacity: 1;
+    }
+
+    .insurance-type-select {
+      padding: 4px 8px;
+      font-size: 12px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      background: white;
+      width: 150px;
+      cursor: pointer;
+    }
   </style>
 </head>
 
@@ -878,10 +938,8 @@
   <!-- Password Popup -->
   <div id="passwordPopup" class="popup">
     <div class="popup-content">
-      <!-- <h3>ENTER PASSWORD</h3> -->
       <div class="password-input-group">
-        <label for="passwordInput"></label>
-        <input type="password" id="passwordInput" >
+        <input type="password" id="passwordInput" placeholder="Enter password">
         <div id="passwordError" class="error-message">Incorrect password</div>
       </div>
       <div class="password-actions">
@@ -1265,7 +1323,6 @@
       function parseExpiryDate(dateStr) {
         if (!dateStr || dateStr === 'N/A') return null;
         
-        // Try to parse displayed format (DD MMM YY)
         const months = {
           'JAN': 0, 'FEB': 1, 'MAR': 2, 'APR': 3, 'MAY': 4, 'JUN': 5,
           'JUL': 6, 'AUG': 7, 'SEP': 8, 'OCT': 9, 'NOV': 10, 'DEC': 11
@@ -1281,7 +1338,6 @@
           }
         }
         
-        // Try YYYY-MM-DD format
         if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
           const [year, month] = dateStr.split('-').map(Number);
           return { month, year };
@@ -1297,7 +1353,6 @@
         const expiry = parseExpiryDate(dateStr);
         if (!expiry) return false;
         
-        // Check if the expiry month and year match the target
         return expiry.month === parseInt(targetMonth) && expiry.year === parseInt(targetYear);
       }
 
@@ -1306,7 +1361,6 @@
         
         filteredData = [...soldData];
         
-        // Filter vehicles where insurance_expiry matches the given month and year
         filteredData = filteredData.filter(v => {
           const expiryDate = v.insurance_expiry ? formatDisplayDate(v.insurance_expiry) : 'N/A';
           return isExpiryInMonthYear(expiryDate, month, year);
@@ -1318,7 +1372,6 @@
         
         stockCount.textContent = `(${totalItems})`;
         
-        // Update button style
         if (month && year) {
           expiryCheckBtn.classList.add('expiry-filter-active');
         } else {
@@ -1333,7 +1386,6 @@
       function formatDateForInput(dateStr) {
         if (!dateStr || dateStr === 'N/A') return '';
         
-        // Try to parse the displayed date format (DD MMM YY)
         const months = {
           'JAN': '01', 'FEB': '02', 'MAR': '03', 'APR': '04', 'MAY': '05', 'JUN': '06',
           'JUL': '07', 'AUG': '08', 'SEP': '09', 'OCT': '10', 'NOV': '11', 'DEC': '12'
@@ -1349,7 +1401,6 @@
           }
         }
         
-        // If it's already YYYY-MM-DD
         if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
           return dateStr;
         }
@@ -1360,7 +1411,6 @@
       function formatDateForDisplay(dateStr) {
         if (!dateStr || dateStr === 'N/A' || dateStr === '') return 'N/A';
         
-        // If it's YYYY-MM-DD format
         if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
           const d = new Date(dateStr);
           if (!isNaN(d.getTime())) {
@@ -1379,13 +1429,11 @@
           
           await update(ref(db, `vehicles/${vehicleId}`), updateData);
           
-          // Update local data
           const vehicleIndex = soldData.findIndex(v => v.id === vehicleId);
           if (vehicleIndex !== -1) {
             soldData[vehicleIndex][field] = newDate;
           }
           
-          // Update filtered data
           const filteredIndex = filteredData.findIndex(v => v.id === vehicleId);
           if (filteredIndex !== -1) {
             filteredData[filteredIndex][field] = newDate;
@@ -1401,16 +1449,12 @@
       }
 
       function startDateEdit(spanElement, vehicleId, field, currentValue) {
-        // If there's already an active edit, cancel it
         if (activeDateEdit) {
           cancelDateEdit();
         }
         
-        // Store the original content and parent
-        const originalHTML = spanElement.innerHTML;
         const originalText = spanElement.textContent;
         
-        // Create edit container
         const container = document.createElement('div');
         container.className = 'date-edit-container';
         container.style.display = 'inline-flex';
@@ -1446,7 +1490,6 @@
         cancelBtn.style.backgroundColor = '#dc3545';
         cancelBtn.style.color = 'white';
         
-        // Clear the span and add edit controls
         spanElement.innerHTML = '';
         spanElement.style.cursor = 'default';
         spanElement.style.backgroundColor = '#f0f0f0';
@@ -1455,23 +1498,20 @@
         container.appendChild(cancelBtn);
         spanElement.appendChild(container);
         
-        // Store active edit info
         activeDateEdit = {
           element: spanElement,
           vehicleId,
           field,
           originalValue: currentValue,
-          originalHTML
+          originalText
         };
         
-        // Save button click handler
         saveBtn.onclick = async (e) => {
           e.stopPropagation();
           const newDate = input.value;
           if (newDate) {
             const success = await updateInsuranceDate(vehicleId, field, newDate);
             if (success) {
-              // Update the display
               const displayValue = formatDateForDisplay(newDate);
               spanElement.innerHTML = displayValue;
               spanElement.style.cursor = 'pointer';
@@ -1479,20 +1519,17 @@
               spanElement.className = 'editable-date';
               spanElement.setAttribute('data-value', displayValue);
               
-              // Update the vehicle data
               const vehicle = soldData.find(v => v.id === vehicleId);
               if (vehicle) {
                 vehicle[field] = newDate;
               }
             } else {
-              // Restore original on failure
               spanElement.innerHTML = originalText;
               spanElement.style.cursor = 'pointer';
               spanElement.style.backgroundColor = '';
               spanElement.className = 'editable-date';
             }
           } else {
-            // If no date selected, restore original
             spanElement.innerHTML = originalText;
             spanElement.style.cursor = 'pointer';
             spanElement.style.backgroundColor = '';
@@ -1501,7 +1538,6 @@
           activeDateEdit = null;
         };
         
-        // Cancel button click handler
         cancelBtn.onclick = (e) => {
           e.stopPropagation();
           spanElement.innerHTML = originalText;
@@ -1511,7 +1547,6 @@
           activeDateEdit = null;
         };
         
-        // Focus the input
         input.focus();
       }
 
@@ -1579,7 +1614,6 @@
           findBtn.classList.remove('date-filter-active');
         }
         
-        // Clear expiry filter when applying date filter
         expiryMonthFilter = null;
         expiryYearFilter = null;
         expiryCheckBtn.classList.remove('expiry-filter-active');
@@ -1604,7 +1638,6 @@
 
       /* ========== EXPIRY CHECK HANDLERS ========== */
       expiryCheckBtn.addEventListener('click', () => {
-        // Set default to current month/year if not set
         if (!expiryMonth.value || !expiryYear.value) {
           const today = new Date();
           expiryMonth.value = today.getMonth() + 1;
@@ -1629,7 +1662,6 @@
         expiryCheckPopup.style.display = 'none';
         enableBodyScroll();
         
-        // Clear date filters when applying expiry filter
         fromDateFilter = '';
         toDateFilter = '';
         fromDate.value = '';
@@ -1646,7 +1678,6 @@
         expiryYearFilter = null;
         expiryCheckBtn.classList.remove('expiry-filter-active');
         
-        // Reset to show all vehicles
         applyFilters();
         currentPage = 1;
         renderCurrentPage();
@@ -1678,183 +1709,178 @@
       });
 
       /* ========== DOWNLOAD HANDLERS ========== */
-downloadBtn.addEventListener('click', () => {
-  downloadPopup.style.display = 'flex';
-  disableBodyScroll();
-});
+      downloadBtn.addEventListener('click', () => {
+        downloadPopup.style.display = 'flex';
+        disableBodyScroll();
+      });
 
-cancelDownload.addEventListener('click', () => {
-  downloadPopup.style.display = 'none';
-  enableBodyScroll();
-});
+      cancelDownload.addEventListener('click', () => {
+        downloadPopup.style.display = 'none';
+        enableBodyScroll();
+      });
 
-downloadPDF.addEventListener('click', () => {
-  const vehicles = getFilteredVehiclesForDownload();
-  
-  if (vehicles.length === 0) {
-    showAlert('No vehicles to export', 'Export Error');
-    downloadPopup.style.display = 'none';
-    enableBodyScroll();
-    return;
-  }
-  
-  const html = buildExportHTML(vehicles);
-  const filename = getFilteredFilename(".pdf");
+      downloadPDF.addEventListener('click', () => {
+        const vehicles = getFilteredVehiclesForDownload();
+        
+        if (vehicles.length === 0) {
+          showAlert('No vehicles to export', 'Export Error');
+          downloadPopup.style.display = 'none';
+          enableBodyScroll();
+          return;
+        }
+        
+        const html = buildExportHTML(vehicles);
+        const filename = getFilteredFilename(".pdf");
 
-  html2pdf().from(html).set({
-    filename,
-    jsPDF: { orientation: "landscape", unit: "in", format: "a3" },
-    margin: [0.3, 0.3, 0.3, 0.3],
-    image: { type: "jpeg", quality: 1 },
-    html2canvas: { scale: 2, letterRendering: true }
-  }).save();
+        html2pdf().from(html).set({
+          filename,
+          jsPDF: { orientation: "landscape", unit: "in", format: "a3" },
+          margin: [0.3, 0.3, 0.3, 0.3],
+          image: { type: "jpeg", quality: 1 },
+          html2canvas: { scale: 2, letterRendering: true }
+        }).save();
 
-  downloadPopup.style.display = 'none';
-  enableBodyScroll();
-});
+        downloadPopup.style.display = 'none';
+        enableBodyScroll();
+      });
 
-downloadExcel.addEventListener('click', () => {
-  const vehicles = getFilteredVehiclesForDownload();
-  
-  if (vehicles.length === 0) {
-    showAlert('No vehicles to export', 'Export Error');
-    downloadPopup.style.display = 'none';
-    enableBodyScroll();
-    return;
-  }
-  
-  const filename = getFilteredFilename(".xlsx");
+      downloadExcel.addEventListener('click', () => {
+        const vehicles = getFilteredVehiclesForDownload();
+        
+        if (vehicles.length === 0) {
+          showAlert('No vehicles to export', 'Export Error');
+          downloadPopup.style.display = 'none';
+          enableBodyScroll();
+          return;
+        }
+        
+        const filename = getFilteredFilename(".xlsx");
 
-  // Create header with the required columns: ID, Registration number, consignee, Sold on, agent, valid from, expiry
-  const wsData = [
-    ["ID", "REGISTRATION NUMBER", "CONSIGNEE", "SOLD ON", "AGENT", "VALID FROM", "EXPIRY"]
-  ];
-  
-  vehicles.forEach((v) => {
-    wsData.push([
-      (v.id || "N/A").toString().toUpperCase(),
-      (v.regno || "N/A").toString().toUpperCase(),
-      (v.consignee || "N/A").toString().toUpperCase(),
-      (v.soldDate ? formatDateForDisplay(v.soldDate) : "N/A").toString().toUpperCase(),
-      (v.insurance_agent || "N/A").toString().toUpperCase(),
-      (v.insurance_validFrom ? formatDateForDisplay(v.insurance_validFrom) : "N/A").toString().toUpperCase(),
-      (v.insurance_expiry ? formatDateForDisplay(v.insurance_expiry) : "N/A").toString().toUpperCase()
-    ]);
-  });
-  
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet(wsData);
-  
-  // Set column widths
-  const colWidths = [
-    { wch: 15 }, // ID
-    { wch: 20 }, // REGISTRATION NUMBER
-    { wch: 20 }, // CONSIGNEE
-    { wch: 15 }, // SOLD ON
-    { wch: 20 }, // AGENT
-    { wch: 15 }, // VALID FROM
-    { wch: 15 }  // EXPIRY
-  ];
-  ws['!cols'] = colWidths;
-  
-  XLSX.utils.book_append_sheet(wb, ws, "Sold Vehicles");
-  XLSX.writeFile(wb, filename);
+        const wsData = [
+          ["ID", "REGISTRATION NUMBER", "CONSIGNEE", "SOLD ON", "AGENT", "INSURANCE TYPE", "VALID FROM", "EXPIRY", "REMARKS"]
+        ];
+        
+        vehicles.forEach((v) => {
+          wsData.push([
+            (v.id || "N/A").toString().toUpperCase(),
+            (v.regno || "N/A").toString().toUpperCase(),
+            (v.consignee || "N/A").toString().toUpperCase(),
+            (v.soldDate ? formatDateForDisplay(v.soldDate) : "N/A").toString().toUpperCase(),
+            (v.insurance_agent || "N/A").toString().toUpperCase(),
+            (v.insurance_type || "N/A").toString().toUpperCase(),
+            (v.insurance_validFrom ? formatDateForDisplay(v.insurance_validFrom) : "N/A").toString().toUpperCase(),
+            (v.insurance_expiry ? formatDateForDisplay(v.insurance_expiry) : "N/A").toString().toUpperCase(),
+            (v.remarks || "N/A").toString().toUpperCase()
+          ]);
+        });
+        
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        
+        const colWidths = [
+          { wch: 15 }, { wch: 20 }, { wch: 20 }, { wch: 15 }, 
+          { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 30 }
+        ];
+        ws['!cols'] = colWidths;
+        
+        XLSX.utils.book_append_sheet(wb, ws, "Sold Vehicles");
+        XLSX.writeFile(wb, filename);
 
-  downloadPopup.style.display = 'none';
-  enableBodyScroll();
-});
+        downloadPopup.style.display = 'none';
+        enableBodyScroll();
+      });
 
-function getFilteredVehiclesForDownload() {
-  // Use the currently filtered data
-  let vehicles = filteredData;
-  
-  // If no filtered data (like when page first loads), use all sold vehicles
-  if (vehicles.length === 0 && soldData.length > 0) {
-    vehicles = soldData;
-  }
-  
-  return vehicles;
-}
+      function getFilteredVehiclesForDownload() {
+        let vehicles = filteredData;
+        if (vehicles.length === 0 && soldData.length > 0) {
+          vehicles = soldData;
+        }
+        return vehicles;
+      }
 
-function getFilteredFilename(extension) {
-  let parts = ["Sold_Report"];
-  
-  if (expiryMonthFilter && expiryYearFilter) {
-    const monthNames = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-    parts.push(`${monthNames[expiryMonthFilter-1]}_${expiryYearFilter}`);
-  }
-  
-  if (fromDateFilter || toDateFilter) {
-    if (fromDateFilter && toDateFilter) {
-      parts.push(`${fromDateFilter}_to_${toDateFilter}`);
-    } else if (fromDateFilter) {
-      parts.push(`from_${fromDateFilter}`);
-    } else if (toDateFilter) {
-      parts.push(`to_${toDateFilter}`);
-    }
-  }
-  
-  const now = new Date();
-  const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-  parts.push(dateStr);
-  
-  return parts.join("_") + extension;
-}
+      function getFilteredFilename(extension) {
+        let parts = ["Sold_Report"];
+        
+        if (expiryMonthFilter && expiryYearFilter) {
+          const monthNames = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+          parts.push(`${monthNames[expiryMonthFilter-1]}_${expiryYearFilter}`);
+        }
+        
+        if (fromDateFilter || toDateFilter) {
+          if (fromDateFilter && toDateFilter) {
+            parts.push(`${fromDateFilter}_to_${toDateFilter}`);
+          } else if (fromDateFilter) {
+            parts.push(`from_${fromDateFilter}`);
+          } else if (toDateFilter) {
+            parts.push(`to_${toDateFilter}`);
+          }
+        }
+        
+        const now = new Date();
+        const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+        parts.push(dateStr);
+        
+        return parts.join("_") + extension;
+      }
 
-function buildExportHTML(vehicles) {
-  const now = new Date();
-  const day = now.getDate();
-  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
-                      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  const month = monthNames[now.getMonth()];
-  const year = now.getFullYear();
+      function buildExportHTML(vehicles) {
+        const now = new Date();
+        const day = now.getDate();
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+                            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const month = monthNames[now.getMonth()];
+        const year = now.getFullYear();
 
-  let hours = now.getHours();
-  const minutes = now.getMinutes().toString().padStart(2, '0');
-  const ampm = hours >= 12 ? 'PM' : 'AM';
-  hours = hours % 12;
-  hours = hours ? hours : 12;
+        let hours = now.getHours();
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12;
 
-  const formattedDate = `${day}-${month}-${year} ${hours}:${minutes} ${ampm}`;
+        const formattedDate = `${day}-${month}-${year} ${hours}:${minutes} ${ampm}`;
 
-  let html = `
-    <div style="font-family: Arial, sans-serif; margin: 10px;">
-      <h1 style="text-align:center; margin-bottom:5px; font-size: 18px;">Sold Vehicles Report</h1>
-      <p style="text-align:right; font-size:9px; margin-top:0; margin-bottom:15px;">
-        Generated: ${formattedDate}
-      </p>
-      <table border="1" cellspacing="0" cellpadding="4" style="width:100%; border-collapse:collapse; font-size:10px; border: 1px solid #000;">
-        <thead style="background:#f0f0f0; font-weight:bold;">
-          <tr>
-            <th>ID</th>
-            <th>REGISTRATION NUMBER</th>
-            <th>CONSIGNEE</th>
-            <th>SOLD ON</th>
-            <th>AGENT</th>
-            <th>VALID FROM</th>
-            <th>EXPIRY</th>
-          </tr>
-        </thead>
-        <tbody>
-  `;
+        let html = `
+          <div style="font-family: Arial, sans-serif; margin: 10px;">
+            <h1 style="text-align:center; margin-bottom:5px; font-size: 18px;">Sold Vehicles Report</h1>
+            <p style="text-align:right; font-size:9px; margin-top:0; margin-bottom:15px;">
+              Generated: ${formattedDate}
+            </p>
+            <table border="1" cellspacing="0" cellpadding="4" style="width:100%; border-collapse:collapse; font-size:10px; border: 1px solid #000;">
+              <thead style="background:#f0f0f0; font-weight:bold;">
+                <tr>
+                  <th>ID</th>
+                  <th>REGISTRATION NUMBER</th>
+                  <th>CONSIGNEE</th>
+                  <th>SOLD ON</th>
+                  <th>AGENT</th>
+                  <th>INSURANCE TYPE</th>
+                  <th>VALID FROM</th>
+                  <th>EXPIRY</th>
+                  <th>REMARKS</th>
+                </tr>
+              </thead>
+              <tbody>
+        `;
 
-  vehicles.forEach((v) => {
-    html += `
-      <tr>
-        <td>${(v.id || "N/A").toString().toUpperCase()}</td>
-        <td>${(v.regno || "N/A").toString().toUpperCase()}</td>
-        <td>${(v.consignee || "N/A").toString().toUpperCase()}</td>
-        <td>${(v.soldDate ? formatDateForDisplay(v.soldDate) : "N/A").toString().toUpperCase()}</td>
-        <td>${(v.insurance_agent || "N/A").toString().toUpperCase()}</td>
-        <td>${(v.insurance_validFrom ? formatDateForDisplay(v.insurance_validFrom) : "N/A").toString().toUpperCase()}</td>
-        <td>${(v.insurance_expiry ? formatDateForDisplay(v.insurance_expiry) : "N/A").toString().toUpperCase()}</td>
-      </tr>
-    `;
-  });
+        vehicles.forEach((v) => {
+          html += `
+            <tr>
+              <td>${(v.id || "N/A").toString().toUpperCase()}</td>
+              <td>${(v.regno || "N/A").toString().toUpperCase()}</td>
+              <td>${(v.consignee || "N/A").toString().toUpperCase()}</td>
+              <td>${(v.soldDate ? formatDateForDisplay(v.soldDate) : "N/A").toString().toUpperCase()}</td>
+              <td>${(v.insurance_agent || "N/A").toString().toUpperCase()}</td>
+              <td>${(v.insurance_type || "N/A").toString().toUpperCase()}</td>
+              <td>${(v.insurance_validFrom ? formatDateForDisplay(v.insurance_validFrom) : "N/A").toString().toUpperCase()}</td>
+              <td>${(v.insurance_expiry ? formatDateForDisplay(v.insurance_expiry) : "N/A").toString().toUpperCase()}</td>
+              <td>${(v.remarks || "N/A").toString().toUpperCase()}</td>
+            </tr>
+          `;
+        });
 
-  html += `</tbody></table></div>`;
-  return html;
-}
+        html += `</tbody></table></div>`;
+        return html;
+      }
 
       // Close popups when clicking outside
       document.querySelectorAll('.popup').forEach(popup => {
@@ -1876,11 +1902,13 @@ function buildExportHTML(vehicles) {
         editRegnoInput.value = vehicle.regno || '';
         editLogbookInput.value = vehicle.logbook || '';
         editPopup.style.display = 'flex';
+        disableBodyScroll();
         editRegnoInput.focus();
       }
 
       function closeEditPopup() {
         editPopup.style.display = 'none';
+        enableBodyScroll();
         currentEditVehicleId = null;
         editForm.reset();
       }
@@ -1920,7 +1948,7 @@ function buildExportHTML(vehicles) {
           renderCurrentPage();
           
           await showAlert('Vehicle details updated successfully!');
-          closeEditPopup();
+          closeEditPopup(); // This closes the popup after saving
           
         } catch (err) {
           console.error('Error updating vehicle:', err);
@@ -1937,7 +1965,6 @@ function buildExportHTML(vehicles) {
       /* ========== CONSIGNEE UPDATE FUNCTION ========== */
       async function updateVehicleConsignee(vehicleId, newConsignee) {
         try {
-          // Show saving indicator (optional)
           const selectElement = document.querySelector(`select[data-vehicle-id="${vehicleId}"]`);
           if (selectElement) {
             selectElement.style.opacity = '0.6';
@@ -1945,31 +1972,24 @@ function buildExportHTML(vehicles) {
           
           await update(ref(db, `vehicles/${vehicleId}`), { consignee: newConsignee });
           
-          // Update local data
           const vehicleIndex = soldData.findIndex(v => v.id === vehicleId);
           if (vehicleIndex !== -1) {
             soldData[vehicleIndex].consignee = newConsignee;
           }
           
-          // Update filtered data if needed
           const filteredIndex = filteredData.findIndex(v => v.id === vehicleId);
           if (filteredIndex !== -1) {
             filteredData[filteredIndex].consignee = newConsignee;
           }
           
-          // Restore select style
           if (selectElement) {
             selectElement.style.opacity = '1';
           }
-          
-          // Show success message (optional)
-          // await showAlert('Consignee updated successfully!', 'Success');
           
         } catch (err) {
           console.error('Error updating consignee:', err);
           showAlert('Failed to update consignee. Please try again.');
           
-          // Restore select style
           const selectElement = document.querySelector(`select[data-vehicle-id="${vehicleId}"]`);
           if (selectElement) {
             selectElement.style.opacity = '1';
@@ -1977,59 +1997,97 @@ function buildExportHTML(vehicles) {
         }
       }
 
-
       function updateInsuranceAgentsList() {
-        const agentsMap = new Map(); // Use Map to store normalized version -> original capitalized version
+        const agentsMap = new Map();
         
         soldData.forEach(v => {
           if (v.insurance_agent && v.insurance_agent !== 'N/A' && v.insurance_agent !== '') {
             const original = v.insurance_agent.trim();
-            const normalized = original.toUpperCase(); // Normalize to uppercase for comparison
+            const normalized = original.toUpperCase();
             
-            // Only add if we haven't seen this normalized version before
             if (!agentsMap.has(normalized)) {
-              // Store the capitalized version (first letter capital, rest lowercase)
               const capitalized = original.charAt(0).toUpperCase() + original.slice(1).toLowerCase();
               agentsMap.set(normalized, capitalized);
             }
           }
         });
         
-        // Convert to array and sort alphabetically
         allInsuranceAgents = Array.from(agentsMap.values()).sort((a, b) => a.localeCompare(b));
       }
 
-
-            async function updateVehicleInsuranceAgent(vehicleId, newAgent) {
-            try {
-              const updateData = {};
-              // Store in UPPERCASE for consistency
-              updateData.insurance_agent = newAgent.toUpperCase();
-              
-              await update(ref(db, `vehicles/${vehicleId}`), updateData);
-              
-              // Update local data
-              const vehicleIndex = soldData.findIndex(v => v.id === vehicleId);
-              if (vehicleIndex !== -1) {
-                soldData[vehicleIndex].insurance_agent = updateData.insurance_agent;
-              }
-              
-              const filteredIndex = filteredData.findIndex(v => v.id === vehicleId);
-              if (filteredIndex !== -1) {
-                filteredData[filteredIndex].insurance_agent = updateData.insurance_agent;
-              }
-              
-              // Refresh the agents list to include new agent
-              updateInsuranceAgentsList();
-              
-              await showAlert('Insurance agent updated successfully!', 'Success');
-              return true;
-            } catch (err) {
-              console.error('Error updating insurance agent:', err);
-              await showAlert('Failed to update insurance agent. Please try again.');
-              return false;
-            }
+      async function updateVehicleInsuranceAgent(vehicleId, newAgent) {
+        try {
+          const updateData = {};
+          updateData.insurance_agent = newAgent.toUpperCase();
+          
+          await update(ref(db, `vehicles/${vehicleId}`), updateData);
+          
+          const vehicleIndex = soldData.findIndex(v => v.id === vehicleId);
+          if (vehicleIndex !== -1) {
+            soldData[vehicleIndex].insurance_agent = updateData.insurance_agent;
           }
+          
+          const filteredIndex = filteredData.findIndex(v => v.id === vehicleId);
+          if (filteredIndex !== -1) {
+            filteredData[filteredIndex].insurance_agent = updateData.insurance_agent;
+          }
+          
+          updateInsuranceAgentsList();
+          
+          await showAlert('Insurance agent updated successfully!', 'Success');
+          return true;
+        } catch (err) {
+          console.error('Error updating insurance agent:', err);
+          await showAlert('Failed to update insurance agent. Please try again.');
+          return false;
+        }
+      }
+
+      async function updateVehicleInsuranceType(vehicleId, newType) {
+        try {
+          await update(ref(db, `vehicles/${vehicleId}`), { insurance_type: newType });
+          
+          const vehicleIndex = soldData.findIndex(v => v.id === vehicleId);
+          if (vehicleIndex !== -1) {
+            soldData[vehicleIndex].insurance_type = newType;
+          }
+          
+          const filteredIndex = filteredData.findIndex(v => v.id === vehicleId);
+          if (filteredIndex !== -1) {
+            filteredData[filteredIndex].insurance_type = newType;
+          }
+          
+          await showAlert('Insurance type updated successfully!', 'Success');
+          return true;
+        } catch (err) {
+          console.error('Error updating insurance type:', err);
+          await showAlert('Failed to update insurance type. Please try again.');
+          return false;
+        }
+      }
+
+      async function updateVehicleRemarks(vehicleId, newRemarks) {
+        try {
+          await update(ref(db, `vehicles/${vehicleId}`), { remarks: newRemarks });
+          
+          const vehicleIndex = soldData.findIndex(v => v.id === vehicleId);
+          if (vehicleIndex !== -1) {
+            soldData[vehicleIndex].remarks = newRemarks;
+          }
+          
+          const filteredIndex = filteredData.findIndex(v => v.id === vehicleId);
+          if (filteredIndex !== -1) {
+            filteredData[filteredIndex].remarks = newRemarks;
+          }
+          
+          await showAlert('Remarks updated successfully!', 'Success');
+          return true;
+        } catch (err) {
+          console.error('Error updating remarks:', err);
+          await showAlert('Failed to update remarks. Please try again.');
+          return false;
+        }
+      }
 
       /* ========== DATA LOADING ========== */
       onValue(ref(db, 'vehicles'), snap => {
@@ -2073,7 +2131,6 @@ function buildExportHTML(vehicles) {
           return numA - numB;
         });
         
-        // Update all consignees list
         updateConsigneesList();
         updateInsuranceAgentsList();
         
@@ -2083,33 +2140,28 @@ function buildExportHTML(vehicles) {
 
       /* ========== UPDATE CONSIGNEES LIST ========== */
       function updateConsigneesList() {
-  // Get unique consignees from all vehicles with case-normalized deduplication
-  const consigneesMap = new Map(); // Use Map to store normalized version -> original preferred case
-  
-  soldData.forEach(v => {
-    if (v.consignee && v.consignee !== 'N/A' && v.consignee !== '') {
-      const normalized = v.consignee.toUpperCase().trim();
-      // Keep the first occurrence's original case, or you can prefer a specific format
-      if (!consigneesMap.has(normalized)) {
-        consigneesMap.set(normalized, v.consignee);
+        const consigneesMap = new Map();
+        
+        soldData.forEach(v => {
+          if (v.consignee && v.consignee !== 'N/A' && v.consignee !== '') {
+            const normalized = v.consignee.toUpperCase().trim();
+            if (!consigneesMap.has(normalized)) {
+              consigneesMap.set(normalized, v.consignee);
+            }
+          }
+        });
+        
+        allConsignees = Array.from(consigneesMap.values()).sort((a, b) => 
+          a.toUpperCase().localeCompare(b.toUpperCase())
+        );
       }
-    }
-  });
-  
-  // Convert to array and sort alphabetically by normalized value
-  allConsignees = Array.from(consigneesMap.values()).sort((a, b) => 
-    a.toUpperCase().localeCompare(b.toUpperCase())
-  );
-}
 
       /* ========== FILTER FUNCTIONS ========== */
       function applyFilters() {
         filteredData = [...soldData];
         
-        // Apply date filter
         if (fromDateFilter || toDateFilter) {
           filteredData = filteredData.filter(v => {
-            // Skip vehicles with no sold date
             if (!v.soldDate || v.soldDate === 'N/A' || v.soldDate === '-') {
               return false;
             }
@@ -2119,7 +2171,6 @@ function buildExportHTML(vehicles) {
           });
         }
         
-        // Apply expiry filter (if active)
         if (expiryMonthFilter && expiryYearFilter) {
           filteredData = filteredData.filter(v => {
             const expiryDate = v.insurance_expiry ? formatDisplayDate(v.insurance_expiry) : 'N/A';
@@ -2127,7 +2178,6 @@ function buildExportHTML(vehicles) {
           });
         }
         
-        // Apply search filter
         if (searchQuery) {
           filteredData = filteredData.filter(v => {
             if (!v) return false;
@@ -2262,200 +2312,385 @@ function buildExportHTML(vehicles) {
       });
 
       /* ========== RENDER CURRENT PAGE ========== */
-function renderCurrentPage() {
-  if (filteredData.length === 0) {
-    soldList.innerHTML = '<p>No sold vehicles found.</p>';
-    updatePaginationInfo();
-    return;
-  }
-  
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = Math.min(startIndex + itemsPerPage, filteredData.length);
-  const pageData = filteredData.slice(startIndex, endIndex);
-  
-  soldList.innerHTML = '';
-  
-  // Generate HTML for each vehicle
-  pageData.forEach(v => {
-    const div = document.createElement('div');
-    div.className = 'vehicle-box';
-    
-    const receivingDate = v.receivingDate ? formatDisplayDate(v.receivingDate) : 'N/A';
-    const soldDate = v.soldDate ? formatDisplayDate(v.soldDate) : 'N/A';
-    const insuranceValidFrom = v.insurance_validFrom ? formatDisplayDate(v.insurance_validFrom) : 'N/A';
-    const insuranceExpiry = v.insurance_expiry ? formatDisplayDate(v.insurance_expiry) : 'N/A';
-    
-    const isExpiryMatch = expiryMonthFilter && expiryYearFilter && 
-                          isExpiryInMonthYear(insuranceExpiry, expiryMonthFilter, expiryYearFilter);
-    
-    // Create consignee dropdown
-    let consigneeHtml = '';
-    if (allConsignees.length > 0) {
-      consigneeHtml = `
-        <div title="${(v.consignee || 'N/A').toString().toUpperCase()}">
-          <b>CONSIGNEE:</b> 
-          <span class="consignee-container">
-            <select class="consignee-select" data-vehicle-id="${v.id}" data-original-value="${v.consignee || 'N/A'}">
-              <option value="">SELECT CONSIGNEE</option>
-              ${allConsignees.map(c => `<option value="${c}" ${v.consignee === c ? 'selected' : ''}>${c}</option>`).join('')}
-            </select>
-          </span>
-        </div>
-      `;
-    } else {
-      consigneeHtml = `<div title="${(v.consignee || 'N/A').toString().toUpperCase()}"><b>CONSIGNEE:</b> ${highlight((v.consignee || 'N/A').toString().toUpperCase(), searchQuery)}</div>`;
-    }
-    
-    div.innerHTML = `
-      <div class="vehicle-details">
-        <strong>${highlight((v.brand || 'N/A').toString().toUpperCase(), searchQuery)} 
-          <span class="model-name-red">${highlight((v.model || 'N/A').toString().toUpperCase(), searchQuery)}</span></strong>
-        
-        <div class="vehicle-info-grid">
-          <div title="${(v.id || '').toString().toUpperCase()}"><b>VEHICLE ID:</b> ${highlight((v.id || 'N/A').toString().toUpperCase(), searchQuery)}</div>
-          <div title="${(v.supplier || '').toString().toUpperCase()}"><b>SUPPLIER:</b> ${highlight((v.supplier || 'N/A').toString().toUpperCase(), searchQuery)}</div>
-          ${consigneeHtml}
-          <div title="${receivingDate}"><b>RECEIVING DATE:</b> ${highlight(receivingDate, searchQuery)}</div>
-          <div title="${(v.chassis || '').toString().toUpperCase()}"><b>CHASSIS NO:</b> ${highlight((v.chassis || 'N/A').toString().toUpperCase(), searchQuery)}</div>
-          <div title="${(v.engine || '').toString().toUpperCase()}"><b>ENGINE NO:</b> ${highlight((v.engine || 'N/A').toString().toUpperCase(), searchQuery)}</div>
-          <div title="${(v.shift || '').toString().toUpperCase()}"><b>SHIFT:</b> ${highlight((v.shift || 'N/A').toString().toUpperCase(), searchQuery)}</div>
-          <div title="${(v.drive || '').toString().toUpperCase()}"><b>DRIVE:</b> ${highlight((v.drive || 'N/A').toString().toUpperCase(), searchQuery)}</div>
-          <div title="${(v.fuel || '').toString().toUpperCase()}"><b>FUEL:</b> ${highlight((v.fuel || 'N/A').toString().toUpperCase(), searchQuery)}</div>
-          <div title="${(v.color || '').toString().toUpperCase()}"><b>COLOR:</b> ${highlight((v.color || 'N/A').toString().toUpperCase(), searchQuery)}</div>
-          <div title="${(v.modelYearMonth || '').toString().toUpperCase()}"><b>YEAR:</b> ${highlight((v.modelYearMonth || 'N/A').toString().toUpperCase(), searchQuery)}</div>
-          <div title="${(v.cc || v.ccValue || '').toString().toUpperCase()}"><b>CC:</b> ${highlight(((v.cc || v.ccValue) || 'N/A').toString().toUpperCase(), searchQuery)}</div>
-          <div title="${(v.package || v.packageValue || 'STANDARD').toString().toUpperCase()}"><b>PACKAGE:</b> ${highlight(((v.package || v.packageValue || 'STANDARD') || 'N/A').toString().toUpperCase(), searchQuery)}</div>
-          <div title="${(v.mileage || '').toString().toUpperCase()}"><b>MILEAGE:</b> ${highlight((v.mileage || 'N/A').toString().toUpperCase(), searchQuery)}</div>
-          <div><b>REG NO:</b> ${highlight((v.regno || 'N/A').toString().toUpperCase(), searchQuery)}</div>
-          <div><b>LOGBOOK:</b> ${highlight((v.logbook || 'N/A').toString().toUpperCase(), searchQuery)}</div>
-          <div><b>STATUS:</b> <span class="status-sold">SOLD</span></div>
-          <div><b>REMARKS:</b> ${highlight((v.remarks || 'N/A').toString().toUpperCase(), searchQuery)}</div>
-        </div>
-        
-        <div class="buyer-section">
-          <div class="buyer-grid">
-            <div><span class="buyer-label">BUYER NAME:</span> ${highlight((v.buyerName || 'N/A').toString().toUpperCase(), searchQuery)}</div>
-            <div><span class="buyer-label">PHONE:</span> ${highlight((v.buyerPhone || 'N/A').toString().toUpperCase(), searchQuery)}</div>
-            <div><span class="buyer-label">BUYER ID:</span> ${highlight((v.buyerId || 'N/A').toString().toUpperCase(), searchQuery)}</div>
-            <div><span class="buyer-label">PIN:</span> ${highlight((v.buyerPin || 'N/A').toString().toUpperCase(), searchQuery)}</div>
-            <div><span class="buyer-label">SOLD DATE:</span> ${highlight(soldDate, searchQuery)}</div>
-            <div><span class="buyer-label">SOLD ON:</span> ${highlight((v.soldType || 'N/A').toString().toUpperCase(), searchQuery)}</div>
-          </div>
-        </div>
-        
-        <div class="insurance-section">
-          <div class="insurance-grid">
-              <select class="insurance-agent-select" data-agent-id="${v.id}" data-original="${v.insurance_agent || ''}">
-              <option value="">SELECT INSURANCE AGENT</option>
-              ${allInsuranceAgents.map(agent => {
-                // Case-insensitive comparison
-                const isSelected = v.insurance_agent && v.insurance_agent.toUpperCase() === agent.toUpperCase();
-                return `<option value="${agent}" ${isSelected ? 'selected' : ''}>${agent}</option>`;
-              }).join('')}
-            </select>
-            <div><span class="buyer-label">INSURANCE TYPE:</span> ${highlight((v.insurance_type || 'N/A').toString().toUpperCase(), searchQuery)}</div>
-            <div><span class="buyer-label">VALID FROM:</span> <span class="editable-date" data-vehicle-id="${v.id}" data-field="insurance_validFrom" data-value="${insuranceValidFrom}">${insuranceValidFrom}</span></div>
-            <div><span class="buyer-label">EXPIRY:</span> <span class="editable-date ${isExpiryMatch ? 'expiry-highlight' : ''}" data-vehicle-id="${v.id}" data-field="insurance_expiry" data-value="${insuranceExpiry}">${insuranceExpiry}</span></div>
-            <div><span class="buyer-label">REMARKS:</span> ${highlight((v.insurance_remarks || 'N/A').toString().toUpperCase(), searchQuery)}</div>
-          </div>
-        </div>
-        
-        <div class="vehicle-actions">
-          <button class="edit-btn" data-id="${v.id}" style="background-color: #3498db; color: white;">EDIT REG/BOOK</button>
-          <button class="repossess-btn" data-id="${v.id}" style="background-color: #e74c3c; color: white;">REPOSSESS</button>
-        </div>
-      </div>
-    `;
-    
-    soldList.appendChild(div);
-  });
-  
-  // ========== ATTACH EVENT LISTENERS AFTER HTML IS ADDED ==========
-  
-  // Consignee dropdown listeners
-  document.querySelectorAll('.consignee-select').forEach(select => {
-    // Remove any existing listeners to avoid duplicates
-    const newSelect = select.cloneNode(true);
-    select.parentNode.replaceChild(newSelect, select);
-    
-    newSelect.addEventListener('change', async (e) => {
-      e.stopPropagation();
-      const vehicleId = newSelect.dataset.vehicleId;
-      const newConsignee = newSelect.value;
-      const originalValue = newSelect.dataset.originalValue;
-      
-      if (newConsignee !== originalValue && newConsignee !== '') {
-        const confirmed = await showConfirm(`Change consignee from "${originalValue || 'N/A'}" to "${newConsignee}"?`);
-        
-        if (confirmed) {
-          await updateVehicleConsignee(vehicleId, newConsignee);
-          newSelect.dataset.originalValue = newConsignee;
-        } else {
-          newSelect.value = originalValue || '';
+      function renderCurrentPage() {
+        if (filteredData.length === 0) {
+          soldList.innerHTML = '<p>No sold vehicles found.</p>';
+          updatePaginationInfo();
+          return;
         }
-      } else if (newConsignee === '') {
-        newSelect.value = originalValue || '';
-        await showAlert('Please select a valid consignee.', 'Invalid Selection');
-      }
-    });
-  });
-  
-  // Insurance agent dropdown listeners
-  document.querySelectorAll('.insurance-agent-select').forEach(select => {
-    // Remove any existing listeners to avoid duplicates
-    const newSelect = select.cloneNode(true);
-    select.parentNode.replaceChild(newSelect, select);
-    
-    newSelect.addEventListener('change', async (e) => {
-      e.stopPropagation();
-      const vehicleId = newSelect.dataset.agentId;
-      const newAgent = newSelect.value;
-      const originalValue = newSelect.dataset.original;
-      
-      if (newAgent !== originalValue && newAgent !== '') {
-        const confirmed = await showConfirm(`Change insurance agent from "${originalValue || 'N/A'}" to "${newAgent}"?`);
         
-        if (confirmed) {
-          await updateVehicleInsuranceAgent(vehicleId, newAgent);
-          newSelect.dataset.original = newAgent;
-          // Update the agents list to include any new agent
-          updateInsuranceAgentsList();
-          // Re-render to refresh dropdown options
-          renderCurrentPage();
-        } else {
-          newSelect.value = originalValue || '';
-        }
-      } else if (newAgent === '') {
-        newSelect.value = originalValue || '';
-        await showAlert('Please select a valid insurance agent.', 'Invalid Selection');
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = Math.min(startIndex + itemsPerPage, filteredData.length);
+        const pageData = filteredData.slice(startIndex, endIndex);
+        
+        soldList.innerHTML = '';
+        
+        pageData.forEach(v => {
+          const div = document.createElement('div');
+          div.className = 'vehicle-box';
+          
+          const receivingDate = v.receivingDate ? formatDisplayDate(v.receivingDate) : 'N/A';
+          const soldDate = v.soldDate ? formatDisplayDate(v.soldDate) : 'N/A';
+          const insuranceValidFrom = v.insurance_validFrom ? formatDisplayDate(v.insurance_validFrom) : 'N/A';
+          const insuranceExpiry = v.insurance_expiry ? formatDisplayDate(v.insurance_expiry) : 'N/A';
+          const vehicleRemarks = v.remarks || 'N/A';
+          const insuranceRemarks = v.insurance_remarks || 'N/A';
+          
+          const isExpiryMatch = expiryMonthFilter && expiryYearFilter && 
+                                isExpiryInMonthYear(insuranceExpiry, expiryMonthFilter, expiryYearFilter);
+          
+          let consigneeHtml = '';
+          if (allConsignees.length > 0) {
+            consigneeHtml = `
+              <div>
+                <b>CONSIGNEE:</b> 
+                <select class="consignee-select" data-vehicle-id="${v.id}" data-original-value="${v.consignee || 'N/A'}">
+                  <option value="">SELECT CONSIGNEE</option>
+                  ${allConsignees.map(c => `<option value="${c}" ${v.consignee === c ? 'selected' : ''}>${c}</option>`).join('')}
+                </select>
+              </div>
+            `;
+          } else {
+            consigneeHtml = `<div><b>CONSIGNEE:</b> ${highlight((v.consignee || 'N/A').toString().toUpperCase(), searchQuery)}</div>`;
+          }
+          
+          div.innerHTML = `
+            <div class="vehicle-details">
+              <strong>${highlight((v.brand || 'N/A').toString().toUpperCase(), searchQuery)} 
+                <span class="model-name-red">${highlight((v.model || 'N/A').toString().toUpperCase(), searchQuery)}</span></strong>
+              
+              <div class="vehicle-info-grid">
+                <div><b>VEHICLE ID:</b> ${highlight((v.id || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                <div><b>SUPPLIER:</b> ${highlight((v.supplier || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                ${consigneeHtml}
+                <div><b>RECEIVING DATE:</b> ${highlight(receivingDate, searchQuery)}</div>
+                <div><b>CHASSIS NO:</b> ${highlight((v.chassis || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                <div><b>ENGINE NO:</b> ${highlight((v.engine || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                <div><b>SHIFT:</b> ${highlight((v.shift || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                <div><b>DRIVE:</b> ${highlight((v.drive || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                <div><b>FUEL:</b> ${highlight((v.fuel || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                <div><b>COLOR:</b> ${highlight((v.color || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                <div><b>YEAR:</b> ${highlight((v.modelYearMonth || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                <div><b>CC:</b> ${highlight(((v.cc || v.ccValue) || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                <div><b>PACKAGE:</b> ${highlight(((v.package || v.packageValue || 'STANDARD') || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                <div><b>MILEAGE:</b> ${highlight((v.mileage || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                <div><b>REG NO:</b> ${highlight((v.regno || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                <div><b>LOGBOOK:</b> ${highlight((v.logbook || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                <div><b>STATUS:</b> <span class="status-sold">SOLD</span></div>
+                <!-- Editable Remarks Field 1 - Main Remarks -->
+                <div class="remarks-field-wrapper" style="grid-column: span 3;">
+                  <b>📝 REMARKS:</b>
+                  <span class="editable-field-inline">
+                    <input type="text" class="remarks-input remarks-editable-main" data-field="remarks" data-id="${v.id}" value="${vehicleRemarks !== 'N/A' ? vehicleRemarks.toUpperCase() : ''}" placeholder="Edit main remarks" disabled>
+                    <span class="edit-icon-inline" data-field="remarks" data-id="${v.id}">✏️</span>
+                  </span>
+                </div>
+              </div>
+              
+              <div class="buyer-section">
+                <div class="buyer-grid">
+                  <div><span class="buyer-label">BUYER NAME:</span> ${highlight((v.buyerName || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                  <div><span class="buyer-label">PHONE:</span> ${highlight((v.buyerPhone || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                  <div><span class="buyer-label">BUYER ID:</span> ${highlight((v.buyerId || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                  <div><span class="buyer-label">PIN:</span> ${highlight((v.buyerPin || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                  <div><span class="buyer-label">SOLD DATE:</span> ${highlight(soldDate, searchQuery)}</div>
+                  <div><span class="buyer-label">SOLD ON:</span> ${highlight((v.soldType || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                </div>
+              </div>
+              
+              <div class="insurance-section">
+                <div class="insurance-grid">
+                  <select class="insurance-agent-select" data-agent-id="${v.id}" data-original="${v.insurance_agent || ''}">
+                    <option value="">SELECT INSURANCE AGENT</option>
+                    ${allInsuranceAgents.map(agent => {
+                      const isSelected = v.insurance_agent && v.insurance_agent.toUpperCase() === agent.toUpperCase();
+                      return `<option value="${agent}" ${isSelected ? 'selected' : ''}>${agent}</option>`;
+                    }).join('')}
+                  </select>
+                  <!-- INSURANCE TYPE DROPDOWN - Editable anytime -->
+                  <select class="insurance-type-select" data-type-id="${v.id}" data-original-type="${v.insurance_type || ''}">
+                    <option value="">SELECT TYPE</option>
+                    <option value="PVT" ${v.insurance_type === 'PVT' ? 'selected' : ''}>PVT</option>
+                    <option value="COM" ${v.insurance_type === 'COM' ? 'selected' : ''}>COM</option>
+                    <option value="PSV" ${v.insurance_type === 'PSV' ? 'selected' : ''}>PSV</option>
+                    <option value="OTHER" ${v.insurance_type === 'OTHER' ? 'selected' : ''}>OTHER</option>
+                  </select>
+                  <div><span class="buyer-label">VALID FROM:</span> <span class="editable-date" data-vehicle-id="${v.id}" data-field="insurance_validFrom" data-value="${insuranceValidFrom}">${insuranceValidFrom}</span></div>
+                  <div><span class="buyer-label">EXPIRY:</span> <span class="editable-date ${isExpiryMatch ? 'expiry-highlight' : ''}" data-vehicle-id="${v.id}" data-field="insurance_expiry" data-value="${insuranceExpiry}">${insuranceExpiry}</span></div>
+                  <!-- Editable Remarks Field 2 - Insurance Remarks -->
+                  <div class="remarks-field-wrapper" style="grid-column: span 3; margin-top: 0;">
+                    <b>📝 INSURANCE REMARKS:</b>
+                    <span class="editable-field-inline">
+                      <input type="text" class="remarks-input remarks-editable-insurance" data-field="insurance_remarks" data-id="${v.id}" value="${insuranceRemarks !== 'N/A' ? insuranceRemarks.toUpperCase() : ''}" placeholder="Edit insurance remarks" disabled>
+                      <span class="edit-icon-inline" data-field="insurance_remarks" data-id="${v.id}">✏️</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="vehicle-actions">
+                <button class="edit-btn" data-id="${v.id}" style="background-color: #3498db; color: white;">EDIT REG/BOOK</button>
+                <button class="repossess-btn" data-id="${v.id}" style="background-color: #e74c3c; color: white;">REPOSSESS</button>
+              </div>
+            </div>
+          `;
+          
+          soldList.appendChild(div);
+        });
+        
+        attachConsigneeListeners();
+        attachAgentListeners();
+        attachInsuranceTypeListeners();
+        attachDateListeners();
+        attachRemarksListeners();
+        attachActionListeners();
+        
+        updatePaginationInfo();
+        updatePaginationButtons();
       }
-    });
-  });
-  
-  // Editable date listeners
-  document.querySelectorAll('.editable-date').forEach(span => {
-    // Remove any existing listeners
-    const newSpan = span.cloneNode(true);
-    span.parentNode.replaceChild(newSpan, span);
-    
-    newSpan.addEventListener('click', (e) => {
-      e.stopPropagation();
-      
-      if (activeDateEdit) {
-        cancelDateEdit();
+
+      function attachConsigneeListeners() {
+        document.querySelectorAll('.consignee-select').forEach(select => {
+          const newSelect = select.cloneNode(true);
+          select.parentNode.replaceChild(newSelect, select);
+          
+          newSelect.addEventListener('change', async (e) => {
+            e.stopPropagation();
+            const vehicleId = newSelect.dataset.vehicleId;
+            const newConsignee = newSelect.value;
+            const originalValue = newSelect.dataset.originalValue;
+            
+            if (newConsignee !== originalValue && newConsignee !== '') {
+              const confirmed = await showConfirm(`Change consignee from "${originalValue || 'N/A'}" to "${newConsignee}"?`);
+              if (confirmed) {
+                await updateVehicleConsignee(vehicleId, newConsignee);
+                newSelect.dataset.originalValue = newConsignee;
+              } else {
+                newSelect.value = originalValue || '';
+              }
+            } else if (newConsignee === '') {
+              newSelect.value = originalValue || '';
+              await showAlert('Please select a valid consignee.', 'Invalid Selection');
+            }
+          });
+        });
       }
-      
-      const vehicleId = newSpan.dataset.vehicleId;
-      const field = newSpan.dataset.field;
-      const currentValue = newSpan.dataset.value;
-      
-      startDateEdit(newSpan, vehicleId, field, currentValue);
-    });
-  });
-  
-  updatePaginationInfo();
-  updatePaginationButtons();
-}
+
+      function attachAgentListeners() {
+        document.querySelectorAll('.insurance-agent-select').forEach(select => {
+          const newSelect = select.cloneNode(true);
+          select.parentNode.replaceChild(newSelect, select);
+          
+          newSelect.addEventListener('change', async (e) => {
+            e.stopPropagation();
+            const vehicleId = newSelect.dataset.agentId;
+            const newAgent = newSelect.value;
+            const originalValue = newSelect.dataset.original;
+            
+            if (newAgent !== originalValue && newAgent !== '') {
+              const confirmed = await showConfirm(`Change insurance agent from "${originalValue || 'N/A'}" to "${newAgent}"?`);
+              if (confirmed) {
+                await updateVehicleInsuranceAgent(vehicleId, newAgent);
+                newSelect.dataset.original = newAgent;
+                updateInsuranceAgentsList();
+                renderCurrentPage();
+              } else {
+                newSelect.value = originalValue || '';
+              }
+            } else if (newAgent === '') {
+              newSelect.value = originalValue || '';
+              await showAlert('Please select a valid insurance agent.', 'Invalid Selection');
+            }
+          });
+        });
+      }
+
+      function attachInsuranceTypeListeners() {
+        document.querySelectorAll('.insurance-type-select').forEach(select => {
+          const newSelect = select.cloneNode(true);
+          select.parentNode.replaceChild(newSelect, select);
+          
+          newSelect.addEventListener('change', async (e) => {
+            e.stopPropagation();
+            const vehicleId = newSelect.dataset.typeId;
+            const newType = newSelect.value;
+            const originalValue = newSelect.dataset.originalType;
+            
+            if (newType !== originalValue && newType !== '') {
+              const confirmed = await showConfirm(`Change insurance type from "${originalValue || 'N/A'}" to "${newType}"?`);
+              if (confirmed) {
+                await updateVehicleInsuranceType(vehicleId, newType);
+                newSelect.dataset.originalType = newType;
+              } else {
+                newSelect.value = originalValue || '';
+              }
+            } else if (newType === '') {
+              newSelect.value = originalValue || '';
+              await showAlert('Please select a valid insurance type.', 'Invalid Selection');
+            }
+          });
+        });
+      }
+
+      function attachDateListeners() {
+        document.querySelectorAll('.editable-date').forEach(span => {
+          const newSpan = span.cloneNode(true);
+          span.parentNode.replaceChild(newSpan, span);
+          
+          newSpan.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (activeDateEdit) {
+              cancelDateEdit();
+            }
+            const vehicleId = newSpan.dataset.vehicleId;
+            const field = newSpan.dataset.field;
+            const currentValue = newSpan.dataset.value;
+            startDateEdit(newSpan, vehicleId, field, currentValue);
+          });
+        });
+      }
+
+      function attachRemarksListeners() {
+        // Main remarks edit icons
+        document.querySelectorAll('.edit-icon-inline[data-field="remarks"]').forEach(icon => {
+          const cloneIcon = icon.cloneNode(true);
+          icon.parentNode.replaceChild(cloneIcon, icon);
+          
+          cloneIcon.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const input = cloneIcon.closest('.editable-field-inline')?.querySelector('.remarks-editable-main');
+            if (input) {
+              input.disabled = false;
+              input.focus();
+              input.select();
+            }
+          });
+        });
+        
+        // Insurance remarks edit icons
+        document.querySelectorAll('.edit-icon-inline[data-field="insurance_remarks"]').forEach(icon => {
+          const cloneIcon = icon.cloneNode(true);
+          icon.parentNode.replaceChild(cloneIcon, icon);
+          
+          cloneIcon.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const input = cloneIcon.closest('.editable-field-inline')?.querySelector('.remarks-editable-insurance');
+            if (input) {
+              input.disabled = false;
+              input.focus();
+              input.select();
+            }
+          });
+        });
+        
+        // Main remarks inputs
+        document.querySelectorAll('.remarks-editable-main').forEach(inp => {
+          const cloneInp = inp.cloneNode(true);
+          inp.parentNode.replaceChild(cloneInp, inp);
+          
+          cloneInp.addEventListener('blur', async (e) => {
+            if (cloneInp.disabled) return;
+            const id = cloneInp.dataset.id;
+            const newVal = cloneInp.value.trim().toUpperCase();
+            const oldVal = cloneInp.defaultValue || '';
+            if (newVal !== oldVal) {
+              await updateVehicleRemarks(id, newVal);
+              cloneInp.defaultValue = newVal;
+              showAlert('Main remarks updated!', 'Success');
+            }
+            cloneInp.disabled = true;
+          });
+          
+          cloneInp.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') cloneInp.blur();
+            if (e.key === 'Escape') {
+              cloneInp.value = cloneInp.defaultValue || '';
+              cloneInp.disabled = true;
+            }
+          });
+        });
+        
+        // Insurance remarks inputs
+        document.querySelectorAll('.remarks-editable-insurance').forEach(inp => {
+          const cloneInp = inp.cloneNode(true);
+          inp.parentNode.replaceChild(cloneInp, inp);
+          
+          cloneInp.addEventListener('blur', async (e) => {
+            if (cloneInp.disabled) return;
+            const id = cloneInp.dataset.id;
+            const newVal = cloneInp.value.trim().toUpperCase();
+            const oldVal = cloneInp.defaultValue || '';
+            if (newVal !== oldVal) {
+              await update(ref(db, `vehicles/${id}`), { insurance_remarks: newVal });
+              
+              const idx = soldData.findIndex(v => v.id === id);
+              if (idx !== -1) soldData[idx].insurance_remarks = newVal;
+              const fidx = filteredData.findIndex(v => v.id === id);
+              if (fidx !== -1) filteredData[fidx].insurance_remarks = newVal;
+              
+              cloneInp.defaultValue = newVal;
+              showAlert('Insurance remarks updated!', 'Success');
+            }
+            cloneInp.disabled = true;
+          });
+          
+          cloneInp.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') cloneInp.blur();
+            if (e.key === 'Escape') {
+              cloneInp.value = cloneInp.defaultValue || '';
+              cloneInp.disabled = true;
+            }
+          });
+        });
+      }
+
+      function attachActionListeners() {
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+          const clone = btn.cloneNode(true);
+          btn.parentNode.replaceChild(clone, btn);
+          
+          clone.addEventListener('click', () => {
+            const id = clone.dataset.id;
+            const vehicle = soldData.find(v => v.id === id);
+            if (vehicle) openEditPopup(vehicle);
+          });
+        });
+        
+        document.querySelectorAll('.repossess-btn').forEach(btn => {
+          const clone = btn.cloneNode(true);
+          btn.parentNode.replaceChild(clone, btn);
+          
+          clone.addEventListener('click', async () => {
+            const id = clone.dataset.id;
+            const vehicle = soldData.find(v => v.id === id);
+            if (vehicle && await showConfirm(`Repossess ${vehicle.brand || ''} ${vehicle.model || ''}?`)) {
+              try {
+                const vehicleRef = ref(db, `vehicles/${id}`);
+                const snap = await get(vehicleRef);
+                if (!snap.exists()) return;
+                
+                const vehicleData = snap.val();
+                if (!vehicleData.statusHistory) vehicleData.statusHistory = [];
+                vehicleData.statusHistory.push({
+                  status: 'repossessed',
+                  date: new Date().toISOString().split('T')[0],
+                  timestamp: Date.now()
+                });
+                
+                await update(vehicleRef, { status: 'repossessed', statusHistory: vehicleData.statusHistory });
+                soldData = soldData.filter(v => v.id !== id);
+                applyFilters();
+                renderCurrentPage();
+                await showAlert('Vehicle successfully moved to repossessed section.');
+                setTimeout(() => { window.location.href = 'repossessed.html'; }, 1000);
+              } catch (err) {
+                console.error(err);
+                showAlert('Error repossessing vehicle. Check console for details.');
+              }
+            }
+          });
+        });
+      }
 
       /* ========== HELPER FUNCTIONS ========== */
       function escapeRegExp(string) {
@@ -2493,70 +2728,6 @@ function renderCurrentPage() {
         }
         return String(raw).toUpperCase();
       }
-
-      /* ========== REPOSSESS BUTTON HANDLER ========== */
-      soldList.addEventListener('click', async (e) => {
-        const target = e.target;
-        const button = target.closest('button');
-        if (!button) return;
-        
-        const vehicleId = button.getAttribute('data-id');
-        if (!vehicleId) return;
-        
-        const vehicle = soldData.find(v => String(v.id) === String(vehicleId));
-        
-        if (!vehicle) {
-          console.error('Vehicle not found:', vehicleId);
-          showAlert('Vehicle not found!');
-          return;
-        }
-        
-        if (button.classList.contains('edit-btn')) {
-          openEditPopup(vehicle);
-        }
-        else if (button.classList.contains('repossess-btn')) {
-          const confirmResult = await showConfirm(`Are you sure you want to repossess ${vehicle.brand || ''} ${vehicle.model || ''}?`);
-          if (!confirmResult) return;
-
-          try {
-            const vehicleRef = ref(db, `vehicles/${vehicleId}`);
-            const snap = await get(vehicleRef);
-            if (!snap.exists()) return;
-
-            const vehicleData = snap.val();
-            
-            if (!vehicleData.statusHistory) {
-              vehicleData.statusHistory = [];
-            }
-            
-            vehicleData.statusHistory.push({
-              status: 'repossessed',
-              date: new Date().toISOString().split('T')[0],
-              timestamp: Date.now()
-            });
-
-            await update(vehicleRef, {
-              status: 'repossessed',
-              statusHistory: vehicleData.statusHistory
-            });
-
-            soldData = soldData.filter(v => v.id !== vehicleId);
-            
-            applyFilters();
-            renderCurrentPage();
-
-            await showAlert('Vehicle successfully moved to repossessed section.');
-            
-            setTimeout(() => {
-              window.location.href = 'repossessed.html';
-            }, 1000);
-            
-          } catch (err) {
-            console.error(err);
-            showAlert('Error repossessing vehicle. Check console for details.');
-          }
-        }
-      });
 
       // Click outside to cancel date edit
       document.addEventListener('click', (e) => {

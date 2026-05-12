@@ -14,13 +14,13 @@ import {
 
 // ✅ Your Firebase config
 const firebaseConfig = {
-  apiKey: "AIzaSyBgg69Tq4hqzDeGwflnoV9b8ALrVIxAYdQ",
-  authDomain: "lizaz-enterprises-ltd.firebaseapp.com",
-  projectId: "lizaz-enterprises-ltd",
-  storageBucket: "lizaz-enterprises-ltd.firebasestorage.app",
-  messagingSenderId: "465801710974",
-  appId: "1:465801710974:web:0dbe9d8a91e3d8c0bff72f",
-  measurementId: "G-V4R36ZYP2T"
+    apiKey: "AIzaSyBgg69Tq4hqzDeGwflnoV9b8ALrVIxAYdQ",
+    authDomain: "lizaz-enterprises-ltd.firebaseapp.com",
+    projectId: "lizaz-enterprises-ltd",
+    storageBucket: "lizaz-enterprises-ltd.firebasestorage.app",
+    messagingSenderId: "465801710974",
+    appId: "1:465801710974:web:0dbe9d8a91e3d8c0bff72f",
+    measurementId: "G-V4R36ZYP2T"
 
   // ----------------- Taseen -----------------
 

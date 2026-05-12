@@ -31,6 +31,19 @@
     .vehicle-details strong {
       font-size: 16px;
       color: #222;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .reserved-date-badge {
+      background: #ffc107;
+      color: #7a5a00;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 40px;
+      white-space: nowrap;
     }
     .vehicle-info-grid {
       display: grid;
@@ -353,7 +366,45 @@
       let locationsList = [];
       let selectedVehicleId = null;
 
-      // Custom Alert Function
+      // ========== NEW FUNCTION: Get reserved date ==========
+      function getReservedDate(vehicle) {
+        // Priority 1: reservedDate field (set when moved from available to reserved)
+        if (vehicle.reservedDate) return vehicle.reservedDate;
+        // Priority 2: check statusHistory for when it became reserved
+        if (vehicle.statusHistory && Array.isArray(vehicle.statusHistory)) {
+          const reservedEntry = vehicle.statusHistory.find(entry => entry.status === 'reserved');
+          if (reservedEntry && reservedEntry.date) return reservedEntry.date;
+        }
+        // Priority 3: fallback to receivingDate
+        if (vehicle.receivingDate) return vehicle.receivingDate;
+        return null;
+      }
+
+      function formatDisplayDate(raw) {
+        if (!raw) return 'N/A';
+        if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+          const d = new Date(raw);
+          if (!isNaN(d.getTime())) {
+            const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+            return `${String(d.getDate()).padStart(2,'0')} ${months[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`;
+          }
+        }
+        const parsed = new Date(raw);
+        if (!isNaN(parsed.getTime())) {
+          const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+          return `${String(parsed.getDate()).padStart(2,'0')} ${months[parsed.getMonth()]} ${String(parsed.getFullYear()).slice(2)}`;
+        }
+        const digits = (raw.match(/\d+/g) || []).join('');
+        if (/^\d{8}$/.test(digits)) {
+          const y = digits.slice(0,4);
+          const m = Number(digits.slice(4,6)) - 1;
+          const d = digits.slice(6,8);
+          const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+          return `${d} ${months[m]} ${String(y).slice(2)}`;
+        }
+        return String(raw).toUpperCase();
+      }
+
       function showAlert(message, title = "Alert") {
         return new Promise(resolve => {
           const alert = document.getElementById('customAlert');
@@ -430,31 +481,6 @@
         const pattern = escapeRegExp(query);
         const regex = new RegExp(`(${pattern})`, 'gi');
         return (text + '').replace(regex, '<span class="highlight-search">$1</span>');
-      }
-
-      function formatDisplayDate(raw) {
-        if (!raw) return 'N/A';
-        if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
-          const d = new Date(raw);
-          if (!isNaN(d.getTime())) {
-            const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-            return `${String(d.getDate()).padStart(2,'0')} ${months[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`;
-          }
-        }
-        const parsed = new Date(raw);
-        if (!isNaN(parsed.getTime())) {
-          const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-          return `${String(parsed.getDate()).padStart(2,'0')} ${months[parsed.getMonth()]} ${String(parsed.getFullYear()).slice(2)}`;
-        }
-        const digits = (raw.match(/\d+/g) || []).join('');
-        if (/^\d{8}$/.test(digits)) {
-          const y = digits.slice(0,4);
-          const m = Number(digits.slice(4,6)) - 1;
-          const d = digits.slice(6,8);
-          const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-          return `${d} ${months[m]} ${String(y).slice(2)}`;
-        }
-        return String(raw).toUpperCase();
       }
 
       function getStatusOptions(currentStatus) {
@@ -622,7 +648,10 @@
           const statusOptions = getStatusOptions(currentStatus);
           const statusClass = getStatusClass(currentStatus);
           
-          // Get customer information with multiple possible field names
+          // ========== NEW: Get reserved date and format it ==========
+          const reservedDateRaw = getReservedDate(v);
+          const formattedReservedDate = reservedDateRaw ? formatDisplayDate(reservedDateRaw) : '—';
+          
           const customerName = v.customerName || v.customer_name || v['customerName'] || 'N/A';
           const customerPhone = v.customerPhone || v.customer_phone || v['Customer Phone'] || v.phone || 'N/A';
           const customerId = v.customerId || v.customer_id || v['Customer ID'] || v.idNumber || 'N/A';
@@ -632,10 +661,14 @@
 
           div.innerHTML = `
             <div class="vehicle-details">
-              <strong>${highlight((v.brand || 'N/A').toString().toUpperCase(), searchQuery)} 
-                <span class="model-name-red">${highlight((v.model || 'N/A').toString().toUpperCase(), searchQuery)}</span>
-                <div><b>FOR CUSTOMER:</b> ${highlight(customerName, searchQuery)}</div>
+              <strong>
+                <span>${highlight((v.brand || 'N/A').toString().toUpperCase(), searchQuery)} 
+                  <span class="model-name-red">${highlight((v.model || 'N/A').toString().toUpperCase(), searchQuery)}</span>
+                </span>
+                <!-- NEW: Reserved date badge on the right side -->
+                <span class="reserved-date-badge"><i class="fas fa-calendar-alt"></i> RESERVED: ${formattedReservedDate}</span>
               </strong>
+              <div><b>FOR CUSTOMER:</b> ${highlight(customerName, searchQuery)}</div>
               
               <div class="vehicle-info-grid">
                 <div><b>VEHICLE ID:</b> ${highlight((key || 'N/A').toString().toUpperCase(), searchQuery)}</div>
@@ -851,7 +884,6 @@
           });
       });
 
-      // UPDATED: Confirm Sold Button - Updates vehicle in place, doesn't move to sold node
       document.getElementById("confirmSoldBtn").addEventListener("click", async () => {
         if (!selectedVehicleId) return;
 
@@ -880,12 +912,10 @@
 
           const vehicleData = snap.val();
           
-          // Add status history if it doesn't exist
           if (!vehicleData.statusHistory) {
             vehicleData.statusHistory = [];
           }
           
-          // Add entry to status history
           vehicleData.statusHistory.push({
             status: 'sold',
             date: soldDate,
@@ -906,7 +936,6 @@
             } : null
           });
 
-          // Update vehicle data with new status and sale information
           const updates = {
             status: 'sold',
             soldAt: Date.now(),
@@ -922,14 +951,12 @@
             insurance_expiry: insuranceExpiry || 'N/A',
             insurance_remarks: insuranceRemarks || 'N/A',
             statusHistory: vehicleData.statusHistory,
-            // Clear reservation data
             customerName: null,
             customerPhone: null,
             customerId: null,
             reservedDate: null
           };
 
-          // Update the vehicle in the same location (vehicles node)
           await update(vehicleRef, updates);
           
           await showAlert(`Vehicle ID ${selectedVehicleId} marked as SOLD successfully!`);

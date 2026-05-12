@@ -421,7 +421,6 @@
       margin-top: 20px;
     }
     
-    /* Date filter popup styles */
     .date-filter-popup {
       max-width: 400px;
     }
@@ -533,6 +532,32 @@
       border-color: #007bff;
       box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
     }
+
+    /* Enhanced remarks field styling */
+    .remarks-field-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #fff9e6;
+      padding: 4px 10px;
+      border-radius: 6px;
+      border-left: 3px solid #ffc107;
+    }
+    
+    .remarks-field-wrapper b {
+      color: #856404;
+      flex-shrink: 0;
+    }
+    
+    .remarks-input {
+      background-color: #fffef7 !important;
+      min-width: 180px;
+    }
+    
+    .remarks-input:enabled {
+      background-color: #fff8e1 !important;
+      border-color: #ffc107 !important;
+    }
   </style>
 </head>
 <body>
@@ -553,7 +578,6 @@
     </div>
   </div>
 
-  <!-- Date Filter Popup -->
   <div id="dateFilterPopup" class="popup">
     <div class="popup-content date-filter-popup">
       <h3>FILTER BY RECEIVING DATE</h3>
@@ -719,7 +743,6 @@
       <button id="downloadBtn" style="padding:6px 12px;background:#28a745;color:white;border:none;border-radius:4px;cursor:pointer;">DOWNLOAD</button>
     </header>
 
-    <!-- Active filters indicator -->
     <div id="activeFilters" style="margin: 10px 0; display: none;">
       <span style="background-color: #e9ecef; padding: 5px 10px; border-radius: 4px; font-size: 13px;">
         <span id="filterDescription"></span>
@@ -732,7 +755,6 @@
     </div>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
-    <!-- Updated script without image upload functionality -->
     <script type="module">
       import { db, ref, onValue, set, remove, get, update } from '../firebase.js';
 
@@ -761,7 +783,6 @@
       let packagesByModel = {};
       let selectedVehicleId = null;
       
-      // New date filter variables
       let fromDateFilter = '';
       let toDateFilter = '';
 
@@ -841,7 +862,6 @@
 
       initializeVehicleStatuses();
 
-      // Load locations from essentials
       onValue(ref(db, 'essentials/location'), snap => {
         const data = snap.val() || {};
         locationsList = Object.values(data)
@@ -850,7 +870,6 @@
           .sort((a, b) => a.localeCompare(b));
       });
       
-      // Load packages from essentials - organized by model and CC
       onValue(ref(db, 'essentials/package'), snap => {
         const data = snap.val() || {};
         packagesByModel = {};
@@ -869,7 +888,6 @@
           }
         });
         
-        // Add STANDARD as default package for all models
         Object.keys(packagesByModel).forEach(key => {
           packagesByModel[key].add('STANDARD');
         });
@@ -877,7 +895,6 @@
         console.log('Packages by model loaded:', packagesByModel);
       });
 
-      // Check for duplicate values across ALL vehicles (not just available)
       async function checkDuplicateValue(field, value, excludeVehicleId = null) {
         if (!value || value === '') return false;
         
@@ -887,17 +904,14 @@
         return Object.keys(vehicles).some(key => {
           if (excludeVehicleId && key === excludeVehicleId) return false;
           const vehicle = vehicles[key];
-          // Check ALL vehicles regardless of status
           return vehicle[field]?.toString().toUpperCase() === value.toUpperCase();
         });
       }
 
-      // Load packages for specific vehicle
       function getPackagesForVehicle(brand, model, cc) {
         const modelKey = `${brand}_${model}_${cc}`.toUpperCase();
         const packages = packagesByModel[modelKey] || new Set();
         
-        // Always include STANDARD as fallback
         if (packages.size === 0) {
           packages.add('STANDARD');
         }
@@ -905,7 +919,6 @@
         return Array.from(packages).sort((a, b) => a.localeCompare(b));
       }
 
-      // Fetch all vehicles
       onValue(ref(db, 'vehicles'), snap => {
         vehiclesData = snap.val() || {};
         renderConsigneeButtons();
@@ -920,7 +933,6 @@
       function highlight(text, query) {
         if (!query) return text;
         
-        // Handle multiple terms for highlighting
         const terms = query.split('+').map(t => t.trim()).filter(t => t.length > 0);
         
         if (terms.length === 1) {
@@ -968,12 +980,10 @@
       function parseDateForComparison(dateStr) {
         if (!dateStr) return null;
         
-        // Try parsing as ISO date first (YYYY-MM-DD)
         if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
           return new Date(dateStr);
         }
         
-        // Try parsing as formatted date (DD MON YY)
         const months = {
           'JAN': 0, 'FEB': 1, 'MAR': 2, 'APR': 3, 'MAY': 4, 'JUN': 5,
           'JUL': 6, 'AUG': 7, 'SEP': 8, 'OCT': 9, 'NOV': 10, 'DEC': 11
@@ -983,7 +993,7 @@
         if (parts.length === 3) {
           const day = parseInt(parts[0]);
           const month = months[parts[1]];
-          const year = 2000 + parseInt(parts[2]); // Assuming 20xx
+          const year = 2000 + parseInt(parts[2]);
           if (!isNaN(day) && month !== undefined && !isNaN(year)) {
             return new Date(year, month, day);
           }
@@ -997,7 +1007,7 @@
         if (!fromDateStr && !toDateStr) return true;
         
         const vehicleDate = parseDateForComparison(dateStr);
-        if (!vehicleDate) return true; // If can't parse date, include it
+        if (!vehicleDate) return true;
         
         vehicleDate.setHours(0, 0, 0, 0);
         
@@ -1076,7 +1086,6 @@
       function renderConsigneeButtons() {
         consigneeButtonsDiv.innerHTML = "";
         
-        // Get only available vehicles
         const availableVehicles = Object.values(vehiclesData || {}).filter(v => 
           (v.status || 'available') === 'available'
         );
@@ -1091,7 +1100,6 @@
         if (!currentFilter) allBtn.classList.add("filter-active");
         consigneeButtonsDiv.appendChild(allBtn);
 
-        // Get consignees ONLY from available vehicles
         const consignees = [...new Set(availableVehicles
           .map(v => (v?.consignee || '').toString().trim().toUpperCase())
           .filter(Boolean))]
@@ -1113,7 +1121,6 @@
       function renderLocationButtons() {
         locationButtonsDiv.innerHTML = "";
         
-        // Get only available vehicles
         const availableVehicles = Object.values(vehiclesData || {}).filter(v => 
           (v.status || 'available') === 'available'
         );
@@ -1128,7 +1135,6 @@
         };
         locationButtonsDiv.appendChild(allBtn);
 
-        // Get locations ONLY from available vehicles
         const locations = [...new Set(availableVehicles
           .map(v => (v?.location || '').toString().trim().toUpperCase())
           .filter(Boolean))]
@@ -1160,9 +1166,7 @@
         renderStock();
       };
 
-      // FIND button click handler
       findBtn.addEventListener('click', () => {
-        // Set default dates if not set
         if (!fromDate.value && !toDate.value) {
           const today = new Date().toISOString().split('T')[0];
           fromDate.value = today;
@@ -1172,7 +1176,6 @@
         disableBodyScroll();
       });
 
-      // Apply date filter
       applyDateFilter.addEventListener('click', () => {
         fromDateFilter = fromDate.value;
         toDateFilter = toDate.value;
@@ -1180,7 +1183,6 @@
         dateFilterPopup.style.display = 'none';
         enableBodyScroll();
         
-        // Update find button style
         if (fromDateFilter || toDateFilter) {
           findBtn.classList.add('date-filter-active');
         } else {
@@ -1190,7 +1192,6 @@
         renderStock();
       });
 
-      // Clear date filter
       clearDateFilter.addEventListener('click', () => {
         fromDate.value = '';
         toDate.value = '';
@@ -1199,13 +1200,11 @@
         findBtn.classList.remove('date-filter-active');
       });
 
-      // Cancel date filter
       cancelDateFilter.addEventListener('click', () => {
         dateFilterPopup.style.display = 'none';
         enableBodyScroll();
       });
 
-      // Clear all filters
       clearAllFilters.addEventListener('click', () => {
         currentFilter = '';
         currentLocationFilter = '';
@@ -1270,7 +1269,6 @@
           filteredVehicles = filteredVehicles.filter(v => v && (v.location || '').toString().trim().toUpperCase() === currentLocationFilter);
         }
 
-        // Apply date filter
         if (fromDateFilter || toDateFilter) {
           filteredVehicles = filteredVehicles.filter(v => {
             const displayDate = formatDisplayDate(v.receivingDate);
@@ -1279,13 +1277,11 @@
         }
 
         if (searchQuery) {
-          // Split search query by '+' sign
           const searchTerms = searchQuery.split('+').map(term => term.trim().toLowerCase()).filter(term => term.length > 0);
           
           filteredVehicles = filteredVehicles.filter(v => {
             if (!v) return false;
             
-            // Build array of all fields to search
             const searchableFields = [
               v.brand, v.model, v.supplier, v.consignee, v.receivingDate,
               v.chassis, v.engine, v.shift, v.drive, v.fuel, v.color,
@@ -1294,33 +1290,27 @@
               v.status
             ];
             
-            // Convert all fields to strings and join them for searching
             const searchableText = searchableFields
               .map(field => String(field || '').toLowerCase())
               .join(' ');
             
-            // Check if ALL search terms are present in the combined text
             return searchTerms.every(term => searchableText.includes(term));
           });
         }
 
-        // IMPROVED SORTING: First by model, then by location, then by vehicle ID
         filteredVehicles.sort((a, b) => {
           const modelA = (a.model || '').toString().toUpperCase();
           const modelB = (b.model || '').toString().toUpperCase();
           
-          // First compare by model
           const modelCompare = modelA.localeCompare(modelB);
           if (modelCompare !== 0) return modelCompare;
           
-          // If same model, compare by location
           const locationA = (a.location || '').toString().toUpperCase();
           const locationB = (b.location || '').toString().toUpperCase();
           const locationCompare = locationA.localeCompare(locationB);
           
           if (locationCompare !== 0) return locationCompare;
           
-          // If same model and location, compare by vehicle ID or receiving date
           const idA = (a.id || '').toString().toUpperCase();
           const idB = (b.id || '').toString().toUpperCase();
           return idA.localeCompare(idB);
@@ -1348,12 +1338,11 @@
           const logbookValue = v.logbook || '';
           const engineValue = v.engine || '';
           const chassisValue = v.chassis || '';
+          const remarksValue = v.remarks || '';
           
-          // Get CC value and current package
           const ccValue = v.cc || v.ccValue || '800';
           const currentPackage = (v.package || v.packageValue || 'STANDARD').toString().toUpperCase();
 
-          // Get model-specific packages
           const modelPackages = getPackagesForVehicle(v.brand, v.model, ccValue);
 
           div.innerHTML = `
@@ -1431,64 +1420,150 @@
                     ).join('')}
                   </select>
                 </div>
-                <div title="${(v.remarks || '').toString().toUpperCase()}"><b>REMARKS:</b> ${highlight((v.remarks || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                <!-- EDITABLE REMARKS FIELD - Editable anytime, inline with edit icon -->
+                <div class="remarks-field-wrapper" style="grid-column: span 3; display: flex; align-items: center; gap: 8px; background: #fff9e6; padding: 4px 10px; border-radius: 6px; border-left: 3px solid #ffc107;">
+                  <b style="color: #856404; flex-shrink: 0;">📝 REMARKS:</b>
+                  <span class="editable-field-inline" style="flex: 2; min-width: 0;">
+                    <input type="text" 
+                          class="editable-input-inline remarks-input" 
+                          data-field="remarks" 
+                          data-id="${key}"
+                          value="${remarksValue.toUpperCase()}"
+                          placeholder="Add remarks (editable anytime)"
+                          style="min-width: 200px; background-color: #fffef7;"
+                          disabled>
+                    <span class="edit-icon-inline" data-field="remarks" data-id="${key}" style="color: #ffc107; opacity: 0.7;">✏️</span>
+                  </span>
+                </div>
               </div>
             </div>
           `;
 
           stockList.appendChild(div);
         });
+        
+        attachRemarksEditHandlers();
+        attachPackageChangeHandler();
+        attachLocationChangeHandler();
+        attachStatusChangeHandler();
+        attachRegLogbookEditHandlers();
       }
       
-      // Package change handler
-      stockList.addEventListener('change', async e => {
-        if (e.target.classList.contains('packageSelect')) {
-          const vehicleId = e.target.dataset.id;
-          const newPackage = e.target.value;
-          const field = e.target.dataset.field || 'package';
-
-          if (!vehicleId || !newPackage) return;
-
-          try {
-            const updates = {};
-            updates[field] = newPackage;
-            await update(ref(db, `vehicles/${vehicleId}`), updates);
-            console.log(`Package updated to ${newPackage} for vehicle ${vehicleId}`);
-          } catch (err) {
-            showAlert('Failed to update package', 'Error');
-            console.error(err);
-          }
+      function attachRemarksEditHandlers() {
+        document.querySelectorAll('.edit-icon-inline[data-field="remarks"]').forEach(icon => {
+          icon.removeEventListener('click', remarksEditClickHandler);
+          icon.addEventListener('click', remarksEditClickHandler);
+        });
+        
+        document.querySelectorAll('.remarks-input').forEach(input => {
+          input.removeEventListener('blur', remarksBlurHandler);
+          input.addEventListener('blur', remarksBlurHandler);
+          input.removeEventListener('keydown', remarksKeyHandler);
+          input.addEventListener('keydown', remarksKeyHandler);
+        });
+      }
+      
+      function remarksEditClickHandler(e) {
+        const icon = e.currentTarget;
+        const input = icon.closest('.editable-field-inline')?.querySelector('.remarks-input');
+        if (input) {
+          input.disabled = false;
+          input.focus();
+          input.select();
         }
-      });
-
-      // Location change handler
-      stockList.addEventListener('change', async e => {
-        if (!e.target.classList.contains('locationSelect')) return;
-
+      }
+      
+      async function remarksBlurHandler(e) {
+        const input = e.target;
+        if (input.disabled) return;
+        
+        const field = input.dataset.field;
+        const vehicleId = input.dataset.id;
+        const oldValue = input.defaultValue || '';
+        let newValue = input.value.trim().toUpperCase();
+        
+        if (newValue === oldValue) {
+          input.disabled = true;
+          return;
+        }
+        
+        try {
+          const updates = {};
+          updates[field] = newValue;
+          await update(ref(db, `vehicles/${vehicleId}`), updates);
+          input.defaultValue = newValue;
+          showAlert(`Remarks updated successfully!`, 'Success');
+        } catch (error) {
+          console.error(`Error updating remarks:`, error);
+          input.value = oldValue;
+          showAlert(`Error updating remarks`, 'Error');
+        }
+        
+        input.disabled = true;
+      }
+      
+      function remarksKeyHandler(e) {
+        if (e.key === 'Enter') {
+          e.target.blur();
+        }
+        if (e.key === 'Escape') {
+          e.target.value = e.target.defaultValue || '';
+          e.target.disabled = true;
+        }
+      }
+      
+      function attachPackageChangeHandler() {
+        stockList.querySelectorAll('.packageSelect').forEach(select => {
+          select.removeEventListener('change', packageChangeHandler);
+          select.addEventListener('change', packageChangeHandler);
+        });
+      }
+      
+      async function packageChangeHandler(e) {
+        const vehicleId = e.target.dataset.id;
+        const newPackage = e.target.value;
+        if (!vehicleId || !newPackage) return;
+        try {
+          await update(ref(db, `vehicles/${vehicleId}`), { package: newPackage });
+          showAlert(`Package updated to ${newPackage}`, 'Success');
+        } catch (err) {
+          showAlert('Failed to update package', 'Error');
+        }
+      }
+      
+      function attachLocationChangeHandler() {
+        stockList.querySelectorAll('.locationSelect').forEach(select => {
+          select.removeEventListener('change', locationChangeHandler);
+          select.addEventListener('change', locationChangeHandler);
+        });
+      }
+      
+      async function locationChangeHandler(e) {
         const vehicleId = e.target.dataset.id;
         const newLocation = e.target.value;
-
         if (!vehicleId || !newLocation) return;
-
         try {
-          await update(ref(db, `vehicles/${vehicleId}`), {
-            location: newLocation
-          });
+          await update(ref(db, `vehicles/${vehicleId}`), { location: newLocation });
+          renderStock();
         } catch (err) {
           showAlert('Failed to update location', 'Error');
-          console.error(err);
         }
-      });
-
-      // Status change handler
-      stockList.addEventListener('change', async (e) => {
-        if (!e.target.classList.contains('statusSelect')) return;
-
-        const vehicleId = e.target.dataset.id;
-        const newStatus = e.target.value;
+      }
+      
+      function attachStatusChangeHandler() {
+        stockList.querySelectorAll('.statusSelect').forEach(select => {
+          select.removeEventListener('change', statusChangeHandler);
+          select.addEventListener('change', statusChangeHandler);
+        });
+      }
+      
+      async function statusChangeHandler(e) {
+        const select = e.target;
+        const vehicleId = select.dataset.id;
+        const newStatus = select.value;
         
         if (!vehicleId || !newStatus) return;
-
+        
         const vehicleRef = ref(db, `vehicles/${vehicleId}`);
         const snap = await get(vehicleRef);
         if (!snap.exists()) return;
@@ -1501,22 +1576,21 @@
           case 'available':
             if (newStatus === 'sold') {
               openSoldPopupWithVehicle(vehicleId, vehicle);
-              e.target.value = oldStatus;
+              select.value = oldStatus;
               return;
             } else if (newStatus === 'reserved') {
               openReservedPopupWithVehicle(vehicleId, vehicle);
-              e.target.value = oldStatus;
+              select.value = oldStatus;
               return;
             } else {
-              e.target.value = oldStatus;
+              select.value = oldStatus;
               return;
             }
-            break;
             
           case 'reserved':
             if (newStatus === 'sold') {
               openSoldPopupWithVehicle(vehicleId, vehicle);
-              e.target.value = oldStatus;
+              select.value = oldStatus;
               return;
             } else if (newStatus === 'available') {
               const result = await showConfirm('Remove reservation and make vehicle available?');
@@ -1532,17 +1606,17 @@
                 showAlert('Vehicle is now available');
                 renderStock();
               } else {
-                e.target.value = oldStatus;
+                select.value = oldStatus;
               }
             } else {
-              e.target.value = oldStatus;
+              select.value = oldStatus;
             }
             break;
             
           case 'repossessed':
             if (newStatus === 'sold') {
               openSoldPopupWithVehicle(vehicleId, vehicle);
-              e.target.value = oldStatus;
+              select.value = oldStatus;
               return;
             } else if (newStatus === 'available') {
               const result = await showConfirm('Make this repossessed vehicle available for sale?');
@@ -1558,10 +1632,10 @@
                 showAlert('Vehicle is now available');
                 renderStock();
               } else {
-                e.target.value = oldStatus;
+                select.value = oldStatus;
               }
             } else {
-              e.target.value = oldStatus;
+              select.value = oldStatus;
             }
             break;
             
@@ -1569,187 +1643,119 @@
             if (newStatus === 'repossessed') {
               const result = await showConfirm('Move this sold vehicle to repossessed status?');
               if (result) {
-                const updates = {
-                  status: 'repossessed'
-                };
+                const updates = { status: 'repossessed' };
                 await update(vehicleRef, updates);
                 showAlert('Vehicle moved to repossessed');
                 renderStock();
               } else {
-                e.target.value = oldStatus;
+                select.value = oldStatus;
               }
             } else {
-              e.target.value = oldStatus;
+              select.value = oldStatus;
             }
             break;
         }
-      });
-
-      // Edit icon click handler
-      stockList.addEventListener("click", (e) => {
-        if (e.target.classList.contains("edit-icon-inline")) {
-          const field = e.target.dataset.field;
-          const vehicleId = e.target.dataset.id;
-          
-          if (!field || !vehicleId) return;
-          
-          const input = e.target.closest('.editable-field-inline').querySelector('.editable-input-inline');
-          if (input) {
-            input.disabled = false;
-            input.focus();
-            input.select();
-            
-            if (field === 'regno') {
-              input.removeEventListener('input', formatRegistrationInput);
-              input.addEventListener('input', formatRegistrationInput);
-            }
+      }
+      
+      function attachRegLogbookEditHandlers() {
+        document.querySelectorAll('.edit-icon-inline[data-field="regno"], .edit-icon-inline[data-field="logbook"]').forEach(icon => {
+          icon.removeEventListener('click', regLogEditClickHandler);
+          icon.addEventListener('click', regLogEditClickHandler);
+        });
+        
+        document.querySelectorAll('.editable-input-inline:not(.remarks-input)').forEach(input => {
+          if (input.dataset.field === 'regno' || input.dataset.field === 'logbook') {
+            input.removeEventListener('blur', regLogBlurHandler);
+            input.addEventListener('blur', regLogBlurHandler);
+            input.removeEventListener('keydown', regLogKeyHandler);
+            input.addEventListener('keydown', regLogKeyHandler);
+          }
+        });
+      }
+      
+      function regLogEditClickHandler(e) {
+        const icon = e.currentTarget;
+        const input = icon.closest('.editable-field-inline')?.querySelector('.editable-input-inline');
+        if (input) {
+          input.disabled = false;
+          input.focus();
+          input.select();
+          if (input.dataset.field === 'regno') {
+            input.removeEventListener('input', formatRegistrationInput);
+            input.addEventListener('input', formatRegistrationInput);
           }
         }
-      });
-
-      // Format registration input
+      }
+      
       function formatRegistrationInput(e) {
         const input = e.target;
         let value = input.value.replace(/[^A-Z0-9]/gi, '').toUpperCase();
-        
         value = value.slice(0, 7);
-        
         if (value.length > 3) {
           value = value.slice(0, 3) + ' ' + value.slice(3);
         }
-        
         input.value = value;
-        
-        validateRegistrationInput(input);
       }
-
-      // Validate registration format
+      
       function isValidRegistrationFormat(reg) {
         return /^[A-Z]{3} [0-9]{3}[A-Z]$/.test(reg);
       }
-
-      function validateRegistrationInput(input) {
-        const value = input.value.trim().toUpperCase();
+      
+      async function regLogBlurHandler(e) {
+        const input = e.target;
+        if (input.disabled) return;
+        
+        const field = input.dataset.field;
         const vehicleId = input.dataset.id;
-        const validationMsg = document.getElementById(`validation-${vehicleId}`);
+        const originalValue = input.defaultValue || '';
+        let newValue = input.value.trim().toUpperCase();
         
-        if (value === '') {
-          input.classList.remove('invalid');
-          if (validationMsg) validationMsg.style.display = 'none';
-          return true;
-        }
-        
-        const isValid = isValidRegistrationFormat(value);
-        
-        if (isValid) {
-          input.classList.remove('invalid');
-          if (validationMsg) validationMsg.style.display = 'none';
-        } else {
-          input.classList.add('invalid');
-          if (validationMsg) {
-            validationMsg.textContent = 'Format: ABC 123A (3 letters, 3 digits, 1 letter)';
-            validationMsg.style.display = 'block';
+        if (field === 'regno' && newValue !== '') {
+          if (!isValidRegistrationFormat(newValue)) {
+            showAlert('Registration format must be: ABC 123A (3 letters, space, 3 digits, 1 letter)', 'Validation Error');
+            input.value = originalValue;
+            input.disabled = true;
+            return;
           }
         }
         
-        return isValid;
-      }
-
-      // Check for duplicates and update UI
-      async function checkAndShowDuplicate(field, value, vehicleId) {
-        const isDuplicate = await checkDuplicateValue(field, value, vehicleId);
-        const duplicateMsg = document.getElementById(`duplicate-${field}-${vehicleId}`);
-        const input = document.querySelector(`.editable-input-inline[data-id="${vehicleId}"][data-field="${field}"]`);
-        
-        if (duplicateMsg && input) {
-          if (isDuplicate && value !== '') {
-            duplicateMsg.style.display = 'block';
-            input.classList.add('duplicate');
-            return true;
-          } else {
-            duplicateMsg.style.display = 'none';
-            input.classList.remove('duplicate');
-            return false;
-          }
-        }
-        return false;
-      }
-
-      // Handle blur for editable inputs
-      stockList.addEventListener("blur", async (e) => {
-        if (e.target.classList.contains("editable-input-inline") && !e.target.disabled) {
-          const input = e.target;
-          const field = input.dataset.field;
-          const vehicleId = input.dataset.id;
-          const originalValue = input.defaultValue || '';
-          let newValue = input.value.trim().toUpperCase();
-          
-          if (!field || !vehicleId) return;
-          
-          // Validate registration format
-          if (field === 'regno' && newValue !== '') {
-            if (!isValidRegistrationFormat(newValue)) {
-              showAlert('Registration format must be: ABC 123A (3 letters, space, 3 digits, 1 letter)', 'Validation Error');
+        if (newValue !== originalValue) {
+          if (newValue !== '') {
+            const isDuplicate = await checkDuplicateValue(field, newValue, vehicleId);
+            if (isDuplicate) {
+              showAlert(`${field.toUpperCase()} number already exists in stock. Please use a unique value.`, 'Duplicate Error');
               input.value = originalValue;
               input.disabled = true;
               return;
             }
           }
           
-          // Only process if value changed
-          if (newValue !== originalValue) {
-            // Check for duplicates
-            if (newValue !== '') {
-              const isDuplicate = await checkDuplicateValue(field, newValue, vehicleId);
-              
-              if (isDuplicate) {
-                showAlert(`${field.toUpperCase()} number already exists in stock. Please use a unique value.`, 'Duplicate Error');
-                input.value = originalValue;
-                input.disabled = true;
-                return;
-              }
-            }
-            
-            try {
-              const updates = {};
-              updates[field] = newValue;
-              
-              await update(ref(db, `vehicles/${vehicleId}`), updates);
-              
-              input.defaultValue = newValue;
-              input.disabled = true;
-              
-              if (newValue === '') {
-                showAlert(`${field.toUpperCase()} has been cleared`, 'Success');
-              } else {
-                showAlert(`${field.toUpperCase()} has been updated`, 'Success');
-              }
-              
-            } catch (error) {
-              console.error(`Error updating ${field}:`, error);
-              input.value = originalValue;
-              input.disabled = true;
-              showAlert(`Error updating ${field}`, 'Error');
-            }
-          } else {
-            // No change, just disable
-            input.disabled = true;
+          try {
+            const updates = {};
+            updates[field] = newValue;
+            await update(ref(db, `vehicles/${vehicleId}`), updates);
+            input.defaultValue = newValue;
+            showAlert(`${field.toUpperCase()} has been updated`, 'Success');
+          } catch (error) {
+            console.error(`Error updating ${field}:`, error);
+            input.value = originalValue;
+            showAlert(`Error updating ${field}`, 'Error');
           }
         }
-      }, true);
-
-      // Handle Enter key in editable inputs
-      stockList.addEventListener("keydown", (e) => {
-        if (e.target.classList.contains("editable-input-inline") && e.key === "Enter") {
+        
+        input.disabled = true;
+      }
+      
+      function regLogKeyHandler(e) {
+        if (e.key === 'Enter') {
           e.target.blur();
         }
-        if (e.target.classList.contains("editable-input-inline") && e.key === "Escape") {
+        if (e.key === 'Escape') {
           e.target.value = e.target.defaultValue || '';
           e.target.disabled = true;
         }
-      });
-
-      // Sold popup functions
+      }
+      
       function openSoldPopupWithVehicle(vehicleId, vehicle) {
         selectedVehicleId = vehicleId;
         
@@ -1834,7 +1840,6 @@
         window.scrollTo(0, __scrollY || 0);
       }
 
-      // Load insurance agents
       onValue(ref(db, 'essentials/insurance_agent'), snap => {
         const insuranceAgentSelect = document.getElementById('insuranceAgent');
         if (!insuranceAgentSelect) return;
@@ -1852,7 +1857,6 @@
           });
       });
 
-      // UPDATED Sold confirmation - Keep vehicle at same location, just update status
       document.getElementById("confirmSoldBtn").addEventListener("click", async () => {
         if (!selectedVehicleId) return;
 
@@ -1881,12 +1885,10 @@
 
           const vehicleData = snap.val();
           
-          // Add status history if it doesn't exist
           if (!vehicleData.statusHistory) {
             vehicleData.statusHistory = [];
           }
           
-          // Add entry to status history
           vehicleData.statusHistory.push({
             status: 'sold',
             date: soldDate,
@@ -1907,7 +1909,6 @@
             } : null
           });
 
-          // Update vehicle data with new status and sale information
           const updates = {
             status: 'sold',
             soldAt: Date.now(),
@@ -1925,7 +1926,6 @@
             statusHistory: vehicleData.statusHistory
           };
 
-          // Update the vehicle in the same location (vehicles node)
           await update(vehicleRef, updates);
           
           await showAlert(`Vehicle ID ${selectedVehicleId} marked as SOLD successfully!`);
@@ -1937,7 +1937,6 @@
           
           renderStock();
           
-          // Optional: redirect to sold page after a delay
           setTimeout(() => {
             window.location.href = 'sold.html';
           }, 1500);
@@ -1948,7 +1947,6 @@
         }
       });
 
-      // Reserved popup functions
       function openReservedPopupWithVehicle(vehicleId, vehicle) {
         selectedVehicleId = vehicleId;
         
@@ -1966,7 +1964,6 @@
         disableBodyScroll();
       }
 
-      // SINGLE Confirm Reservation handler - REMOVED THE DUPLICATE
       document.getElementById('confirmReservedBtn').addEventListener('click', async () => {
         const customerName = document.getElementById('customerName').value.trim().toUpperCase();
         
@@ -1986,12 +1983,10 @@
 
           const vehicleData = snap.val();
           
-          // Add status history if it doesn't exist
           if (!vehicleData.statusHistory) {
             vehicleData.statusHistory = [];
           }
           
-          // Add entry to status history
           vehicleData.statusHistory.push({
             status: 'reserved',
             date: new Date().toISOString().split('T')[0],
@@ -2003,7 +1998,6 @@
             }
           });
 
-          // Update vehicle with customer information - using consistent field names
           await update(vehicleRef, {
             status: 'reserved',
             customerName: customerName,
@@ -2040,7 +2034,6 @@
         selectedVehicleId = null;
       };
 
-      // Download functionality
       document.getElementById("downloadBtn").addEventListener("click", () => {
         document.getElementById("downloadPopup").style.display = "flex";
       });
@@ -2061,7 +2054,6 @@
           vehicles = vehicles.filter(v => v && (v.location || '').toString().trim().toUpperCase() === currentLocationFilter);
         }
 
-        // Apply date filter
         if (fromDateFilter || toDateFilter) {
           vehicles = vehicles.filter(v => {
             const displayDate = formatDisplayDate(v.receivingDate);
@@ -2070,13 +2062,11 @@
         }
 
         if (searchQuery) {
-          // Split search query by '+' sign
           const searchTerms = searchQuery.split('+').map(term => term.trim().toLowerCase()).filter(term => term.length > 0);
           
           vehicles = vehicles.filter(v => {
             if (!v) return false;
             
-            // Build array of all fields to search
             const searchableFields = [
               v.brand, v.model, v.supplier, v.consignee, v.receivingDate,
               v.chassis, v.engine, v.shift, v.drive, v.fuel, v.color,
@@ -2085,12 +2075,10 @@
               v.status
             ];
             
-            // Convert all fields to strings and join them for searching
             const searchableText = searchableFields
               .map(field => String(field || '').toLowerCase())
               .join(' ');
             
-            // Check if ALL search terms are present in the combined text
             return searchTerms.every(term => searchableText.includes(term));
           });
         }
@@ -2123,208 +2111,174 @@
         return parts.join("_") + extension;
       }
 
-      // UPDATED PDF download function with exact image format
-document.getElementById("downloadPDF").addEventListener("click", () => {
-  const vehicles = getFilteredVehicles();
-  
-  // Sort vehicles by model and location to match the image pattern
-  vehicles.sort((a, b) => {
-    const modelA = (a.model || '').toString().toUpperCase();
-    const modelB = (b.model || '').toString().toUpperCase();
-    
-    // First compare by model
-    const modelCompare = modelA.localeCompare(modelB);
-    if (modelCompare !== 0) return modelCompare;
-    
-    // If same model, compare by location
-    const locationA = (a.location || '').toString().toUpperCase();
-    const locationB = (b.location || '').toString().toUpperCase();
-    return locationA.localeCompare(locationB);
-  });
-  
-  const html = buildExportHTMLWithImageFormat(vehicles);
-  const filename = getFilteredFilename(".pdf");
+      document.getElementById("downloadPDF").addEventListener("click", () => {
+        const vehicles = getFilteredVehicles();
+        
+        vehicles.sort((a, b) => {
+          const modelA = (a.model || '').toString().toUpperCase();
+          const modelB = (b.model || '').toString().toUpperCase();
+          const modelCompare = modelA.localeCompare(modelB);
+          if (modelCompare !== 0) return modelCompare;
+          const locationA = (a.location || '').toString().toUpperCase();
+          const locationB = (b.location || '').toString().toUpperCase();
+          return locationA.localeCompare(locationB);
+        });
+        
+        const html = buildExportHTMLWithImageFormat(vehicles);
+        const filename = getFilteredFilename(".pdf");
 
-  html2pdf().from(html).set({
-    filename,
-    jsPDF: { orientation: "landscape", unit: "in", format: "a3" },
-    margin: [0.3, 0.3, 0.3, 0.3],
-    image: { type: "jpeg", quality: 1 },
-    html2canvas: { scale: 2, letterRendering: true }
-  }).save();
+        html2pdf().from(html).set({
+          filename,
+          jsPDF: { orientation: "landscape", unit: "in", format: "a3" },
+          margin: [0.3, 0.3, 0.3, 0.3],
+          image: { type: "jpeg", quality: 1 },
+          html2canvas: { scale: 2, letterRendering: true }
+        }).save();
 
-  document.getElementById("downloadPopup").style.display = "none";
-});
+        document.getElementById("downloadPopup").style.display = "none";
+      });
 
-// UPDATED Excel download function with exact image format
-document.getElementById("downloadExcel").addEventListener("click", () => {
-  const vehicles = getFilteredVehicles();
-  
-  // Sort vehicles by model and location to match the image pattern
-  vehicles.sort((a, b) => {
-    const modelA = (a.model || '').toString().toUpperCase();
-    const modelB = (b.model || '').toString().toUpperCase();
-    
-    // First compare by model 
-    const modelCompare = modelA.localeCompare(modelB);
-    if (modelCompare !== 0) return modelCompare;
-    
-    // If same model, compare by location
-    const locationA = (a.location || '').toString().toUpperCase();
-    const locationB = (b.location || '').toString().toUpperCase();
-    return locationA.localeCompare(locationB);
-  });
-  
-  const filename = getFilteredFilename(".xlsx");
+      document.getElementById("downloadExcel").addEventListener("click", () => {
+        const vehicles = getFilteredVehicles();
+        
+        vehicles.sort((a, b) => {
+          const modelA = (a.model || '').toString().toUpperCase();
+          const modelB = (b.model || '').toString().toUpperCase();
+          const modelCompare = modelA.localeCompare(modelB);
+          if (modelCompare !== 0) return modelCompare;
+          const locationA = (a.location || '').toString().toUpperCase();
+          const locationB = (b.location || '').toString().toUpperCase();
+          return locationA.localeCompare(locationB);
+        });
+        
+        const filename = getFilteredFilename(".xlsx");
 
-  // Create header with Vehicle ID column
-  const wsData = [
-    ["NO.", "VEHICLE ID", "RECEIVED ON", "CHAS NO", "ENGINE NO", "BRAND", "MODEL", "PACKAGE", "SHIFT", "DRIVE", "FUEL", "CC", "COLOUR", "YEAR MONTH", "MILEAGE", "REG NO", "From", "CONSIGNEE", "LOCATION"]
-  ];
-  
-  vehicles.forEach((v, index) => {
-    wsData.push([
-      (index + 1).toString(), // Sequential number
-      (v.id || v.vehicleId || "").toString().toUpperCase(), // Vehicle ID
-      (formatDisplayDate(v.receivingDate) || "").toString().toUpperCase(),
-      (v.chassis || "").toString().toUpperCase(),
-      (v.engine || "").toString().toUpperCase(),
-      (v.brand || "").toString().toUpperCase(),
-      (v.model || "").toString().toUpperCase(),
-      (v.package || v.packageValue || "STANDARD").toString().toUpperCase(),
-      (v.shift || "").toString().toUpperCase(),
-      (v.drive || "").toString().toUpperCase(),
-      (v.fuel || "").toString().toUpperCase(),
-      (v.cc || v.ccValue || "").toString().toUpperCase(),
-      (v.color || "").toString().toUpperCase(),
-      (v.modelYearMonth || "").toString().toUpperCase(),
-      (v.mileage || "").toString().toUpperCase(),
-      (v.regno || "").toString().toUpperCase(),
-      (v.from || v.supplier || "").toString().toUpperCase(),
-      (v.consignee || "").toString().toUpperCase(),
-      (v.location || "").toString().toUpperCase()
-    ]);
-  });
-  
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet(wsData);
-  
-  // Set column widths to match the image style
-  const colWidths = [
-    { wch: 5 },  // NO.
-    { wch: 12 }, // VEHICLE ID
-    { wch: 12 }, // RECEIVED ON
-    { wch: 18 }, // CHAS NO
-    { wch: 18 }, // ENGINE NO
-    { wch: 10 }, // BRAND
-    { wch: 15 }, // MODEL
-    { wch: 15 }, // PACKAGE
-    { wch: 8 },  // SHIFT
-    { wch: 8 },  // DRIVE
-    { wch: 8 },  // FUEL
-    { wch: 6 },  // CC
-    { wch: 8 },  // COLOUR
-    { wch: 12 }, // YEAR MONTH
-    { wch: 10 }, // MILEAGE
-    { wch: 12 }, // REG NO
-    { wch: 15 }, // From
-    { wch: 20 }, // CONSIGNEE
-    { wch: 15 }  // LOCATION
-  ];
-  ws['!cols'] = colWidths;
-  
-  XLSX.utils.book_append_sheet(wb, ws, "Stock");
-  XLSX.writeFile(wb, filename);
+        const wsData = [
+          ["NO.", "VEHICLE ID", "RECEIVED ON", "CHAS NO", "ENGINE NO", "BRAND", "MODEL", "PACKAGE", "SHIFT", "DRIVE", "FUEL", "CC", "COLOUR", "YEAR MONTH", "MILEAGE", "REG NO", "From", "CONSIGNEE", "LOCATION", "REMARKS"]
+        ];
+        
+        vehicles.forEach((v, index) => {
+          wsData.push([
+            (index + 1).toString(),
+            (v.id || v.vehicleId || "").toString().toUpperCase(),
+            (formatDisplayDate(v.receivingDate) || "").toString().toUpperCase(),
+            (v.chassis || "").toString().toUpperCase(),
+            (v.engine || "").toString().toUpperCase(),
+            (v.brand || "").toString().toUpperCase(),
+            (v.model || "").toString().toUpperCase(),
+            (v.package || v.packageValue || "STANDARD").toString().toUpperCase(),
+            (v.shift || "").toString().toUpperCase(),
+            (v.drive || "").toString().toUpperCase(),
+            (v.fuel || "").toString().toUpperCase(),
+            (v.cc || v.ccValue || "").toString().toUpperCase(),
+            (v.color || "").toString().toUpperCase(),
+            (v.modelYearMonth || "").toString().toUpperCase(),
+            (v.mileage || "").toString().toUpperCase(),
+            (v.regno || "").toString().toUpperCase(),
+            (v.from || v.supplier || "").toString().toUpperCase(),
+            (v.consignee || "").toString().toUpperCase(),
+            (v.location || "").toString().toUpperCase(),
+            (v.remarks || "").toString().toUpperCase()
+          ]);
+        });
+        
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        
+        const colWidths = [
+          { wch: 5 }, { wch: 12 }, { wch: 12 }, { wch: 18 }, { wch: 18 },
+          { wch: 10 }, { wch: 15 }, { wch: 15 }, { wch: 8 }, { wch: 8 },
+          { wch: 8 }, { wch: 6 }, { wch: 8 }, { wch: 12 }, { wch: 10 },
+          { wch: 12 }, { wch: 15 }, { wch: 20 }, { wch: 15 }, { wch: 25 }
+        ];
+        ws['!cols'] = colWidths;
+        
+        XLSX.utils.book_append_sheet(wb, ws, "Stock");
+        XLSX.writeFile(wb, filename);
 
-  document.getElementById("downloadPopup").style.display = "none";
-});
+        document.getElementById("downloadPopup").style.display = "none";
+      });
 
-// UPDATED function to build HTML with exact image format including Vehicle ID
-function buildExportHTMLWithImageFormat(vehicles) {
-  const now = new Date();
-  const day = now.getDate();
-  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
-                      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  const month = monthNames[now.getMonth()];
-  const year = now.getFullYear();
+      function buildExportHTMLWithImageFormat(vehicles) {
+        const now = new Date();
+        const day = now.getDate();
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const month = monthNames[now.getMonth()];
+        const year = now.getFullYear();
 
-  let hours = now.getHours();
-  const minutes = now.getMinutes().toString().padStart(2, '0');
-  const ampm = hours >= 12 ? 'PM' : 'AM';
-  hours = hours % 12;
-  hours = hours ? hours : 12;
+        let hours = now.getHours();
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12;
 
-  const formattedDate = `${day}-${month}-${year} ${hours}:${minutes} ${ampm}`;
+        const formattedDate = `${day}-${month}-${year} ${hours}:${minutes} ${ampm}`;
 
-  let html = `
-    <div style="font-family: Arial, sans-serif; margin: 10px;">
-      <h1 style="text-align:center; margin-bottom:5px; font-size: 18px;">Stock Report</h1>
-      <p style="text-align:right; font-size:9px; margin-top:0; margin-bottom:15px;">
-        Generated: ${formattedDate}
-      </p>
-      <table border="1" cellspacing="0" cellpadding="4" style="width:100%; border-collapse:collapse; font-size:9px; border: 1px solid #000;">
-        <thead style="background:#f0f0f0; font-weight:bold;">
-          <tr>
-            <th>NO.</th>
-            <th>VEHICLE ID</th>
-            <th>RECEIVED ON</th>
-            <th>CHAS NO</th>
-            <th>ENGINE NO</th>
-            <th>BRAND</th>
-            <th>MODEL</th>
-            <th>PACKAGE</th>
-            <th>SHIFT</th>
-            <th>DRIVE</th>
-            <th>FUEL</th>
-            <th>CC</th>
-            <th>COLOUR</th>
-            <th>YEAR MONTH</th>
-            <th>MILEAGE</th>
-            <th>REG NO</th>
-            <th>From</th>
-            <th>CONSIGNEE</th>
-            <th>LOCATION</th>
-          </tr>
-        </thead>
-        <tbody>
-  `;
+        let html = `
+          <div style="font-family: Arial, sans-serif; margin: 10px;">
+            <h1 style="text-align:center; margin-bottom:5px; font-size: 18px;">Stock Report</h1>
+            <p style="text-align:right; font-size:9px; margin-top:0; margin-bottom:15px;">
+              Generated: ${formattedDate}
+            </p>
+            <table border="1" cellspacing="0" cellpadding="4" style="width:100%; border-collapse:collapse; font-size:9px; border: 1px solid #000;">
+              <thead style="background:#f0f0f0; font-weight:bold;">
+                <tr>
+                  <th>NO.</th>
+                  <th>VEHICLE ID</th>
+                  <th>RECEIVED ON</th>
+                  <th>CHAS NO</th>
+                  <th>ENGINE NO</th>
+                  <th>BRAND</th>
+                  <th>MODEL</th>
+                  <th>PACKAGE</th>
+                  <th>SHIFT</th>
+                  <th>DRIVE</th>
+                  <th>FUEL</th>
+                  <th>CC</th>
+                  <th>COLOUR</th>
+                  <th>YEAR MONTH</th>
+                  <th>MILEAGE</th>
+                  <th>REG NO</th>
+                  <th>From</th>
+                  <th>CONSIGNEE</th>
+                  <th>LOCATION</th>
+                  <th>REMARKS</th>
+                </tr>
+              </thead>
+              <tbody>
+        `;
 
-  vehicles.forEach((v, index) => {
-    html += `
-      <tr>
-        <td>${index + 1}</td>
-        <td>${(v.id || v.vehicleId || "").toString().toUpperCase()}</td>
-        <td>${(formatDisplayDate(v.receivingDate) || "").toString().toUpperCase()}</td>
-        <td>${(v.chassis || "").toString().toUpperCase()}</td>
-        <td>${(v.engine || "").toString().toUpperCase()}</td>
-        <td>${(v.brand || "").toString().toUpperCase()}</td>
-        <td>${(v.model || "").toString().toUpperCase()}</td>
-        <td>${(v.package || v.packageValue || "STANDARD").toString().toUpperCase()}</td>
-        <td>${(v.shift || "").toString().toUpperCase()}</td>
-        <td>${(v.drive || "").toString().toUpperCase()}</td>
-        <td>${(v.fuel || "").toString().toUpperCase()}</td>
-        <td>${(v.cc || v.ccValue || "").toString().toUpperCase()}</td>
-        <td>${(v.color || "").toString().toUpperCase()}</td>
-        <td>${(v.modelYearMonth || "").toString().toUpperCase()}</td>
-        <td>${(v.mileage || "").toString().toUpperCase()}</td>
-        <td>${(v.regno || "").toString().toUpperCase()}</td>
-        <td>${(v.from || v.supplier || "").toString().toUpperCase()}</td>
-        <td>${(v.consignee || "").toString().toUpperCase()}</td>
-        <td>${(v.location || "").toString().toUpperCase()}</td>
-      </tr>
-    `;
-  });
+        vehicles.forEach((v, index) => {
+          html += `
+            <tr>
+              <td>${index + 1}</td>
+              <td>${(v.id || v.vehicleId || "").toString().toUpperCase()}</td>
+              <td>${(formatDisplayDate(v.receivingDate) || "").toString().toUpperCase()}</td>
+              <td>${(v.chassis || "").toString().toUpperCase()}</td>
+              <td>${(v.engine || "").toString().toUpperCase()}</td>
+              <td>${(v.brand || "").toString().toUpperCase()}</td>
+              <td>${(v.model || "").toString().toUpperCase()}</td>
+              <td>${(v.package || v.packageValue || "STANDARD").toString().toUpperCase()}</td>
+              <td>${(v.shift || "").toString().toUpperCase()}</td>
+              <td>${(v.drive || "").toString().toUpperCase()}</td>
+              <td>${(v.fuel || "").toString().toUpperCase()}</td>
+              <td>${(v.cc || v.ccValue || "").toString().toUpperCase()}</td>
+              <td>${(v.color || "").toString().toUpperCase()}</td>
+              <td>${(v.modelYearMonth || "").toString().toUpperCase()}</td>
+              <td>${(v.mileage || "").toString().toUpperCase()}</td>
+              <td>${(v.regno || "").toString().toUpperCase()}</td>
+              <td>${(v.from || v.supplier || "").toString().toUpperCase()}</td>
+              <td>${(v.consignee || "").toString().toUpperCase()}</td>
+              <td>${(v.location || "").toString().toUpperCase()}</td>
+              <td>${(v.remarks || "").toString().toUpperCase()}</td>
+            </tr>
+          `;
+        });
 
-  html += `</tbody></table></div>`;
-  return html;
-}
-
-      // Keep the old function for backward compatibility
-      function buildExportHTML(vehicles) {
-        return buildExportHTMLWithImageFormat(vehicles);
+        html += `</tbody></table></div>`;
+        return html;
       }
 
-      // Close popups when clicking outside
       document.querySelectorAll('.popup').forEach(popup => {
         popup.addEventListener('click', function(e) {
           if (e.target === this) {

@@ -45,6 +45,20 @@
     .vehicle-details strong {
       font-size: 16px;
       color: #222;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    .repossessed-date-badge {
+      background: #dc3545;
+      color: white;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 40px;
+      white-space: nowrap;
     }
     
     .vehicle-info-grid {
@@ -578,6 +592,20 @@
       let totalPages = 1;
       let totalItems = 0;
 
+      // ========== NEW FUNCTION: Get repossessed date ==========
+      function getRepossessedDate(vehicle) {
+        // Priority 1: repossessedDate field (set when moved to repossessed)
+        if (vehicle.repossessedDate) return vehicle.repossessedDate;
+        // Priority 2: check statusHistory for when it became repossessed
+        if (vehicle.statusHistory && Array.isArray(vehicle.statusHistory)) {
+          const repossessedEntry = vehicle.statusHistory.find(entry => entry.status === 'repossessed');
+          if (repossessedEntry && repossessedEntry.date) return repossessedEntry.date;
+        }
+        // Priority 3: fallback to receivingDate
+        if (vehicle.receivingDate) return vehicle.receivingDate;
+        return null;
+      }
+
       // Body scroll lock
       let __scrollY = 0;
       function disableBodyScroll() {
@@ -1033,10 +1061,19 @@
           // Format dates
           const receivingDate = v.receivingDate ? formatDisplayDate(v.receivingDate) : 'N/A';
           
+          // ========== NEW: Get repossessed date and format it ==========
+          const repossessedDateRaw = getRepossessedDate(v);
+          const formattedRepossessedDate = repossessedDateRaw ? formatDisplayDate(repossessedDateRaw) : '—';
+          
           div.innerHTML = `
             <div class="vehicle-details">
-              <strong>${highlight((v.brand || 'N/A').toString().toUpperCase(), searchQuery)} 
-                <span class="model-name-red">${highlight((v.model || 'N/A').toString().toUpperCase(), searchQuery)}</span></strong>
+              <strong>
+                <span>${highlight((v.brand || 'N/A').toString().toUpperCase(), searchQuery)} 
+                  <span class="model-name-red">${highlight((v.model || 'N/A').toString().toUpperCase(), searchQuery)}</span>
+                </span>
+                <!-- NEW: Repossessed date badge on the right side -->
+                <span class="repossessed-date-badge"><i class="fas fa-calendar-alt"></i> REPOSSESSED: ${formattedRepossessedDate}</span>
+              </strong>
               
               <div class="vehicle-info-grid">
                 <div title="${(v.id || '').toString().toUpperCase()}"><b>VEHICLE ID:</b> ${highlight((v.id || 'N/A').toString().toUpperCase(), searchQuery)}</div>

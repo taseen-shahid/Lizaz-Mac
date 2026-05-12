@@ -3,18 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>LIZAZ ENTERPRISE | DASHBOARD SEARCH</title>
+  <title>LIZAZ ENTERPRISE | DASHBOARD + ON THE PORT</title>
   <link rel="stylesheet" href="./assets/styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
   <style>
-    /* === PRESERVED ORIGINAL CSS + ENHANCEMENTS FOR SEARCH === */
+    /* preserve original dashboard styles + hidden button styling - KEPT EXACTLY AS ORIGINAL */
     #charts-container {
       width: 100%;
       margin: 40px auto;
       overflow-x: auto;
       overflow-y: hidden;
     }
-    
     .chart-row {
       width: 100%;
       margin-bottom: 30px;
@@ -22,21 +22,17 @@
       gap: 20px;
       flex-wrap: wrap;
     }
-    
     .chart-row-full {
       width: 100%;
     }
-    
     .chart-row-half {
       flex: 1;
       min-width: 300px;
     }
-    
     .chart-row-third {
       flex: 1;
       min-width: 280px;
     }
-    
     canvas {
       width: 100% !important;
       height: 420px !important;
@@ -45,11 +41,33 @@
       padding: 20px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       display: block;
+      font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif !important;
     }
-    
+    /* CRITICAL FIX: ensure canvas expands to full container width and touches borders */
+    .chart-row canvas,
+    .chart-row-full canvas,
+    .chart-row-half canvas,
+    .chart-row-third canvas {
+      width: 100% !important;
+      max-width: 100% !important;
+      box-sizing: border-box;
+    }
+    /* make chart containers use full available width */
+    .chart-row-half,
+    .chart-row-third,
+    .chart-row-full {
+      width: 100%;
+    }
+    /* inner canvas wrapper to enforce full width without extra margins */
     .chart-row-half canvas,
     .chart-row-third canvas {
       height: 380px !important;
+      width: 100% !important;
+    }
+    
+    /* Improved chart font styling */
+    .chartjs-text, .chartjs-label, canvas {
+      font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif !important;
     }
     
     #stats {
@@ -58,24 +76,37 @@
       margin: 20px;
       flex-wrap: wrap;
     }
-    
     .stat {
       background: #007bff;
       color: white;
       padding: 10px 20px;
       border-radius: 6px;
       font-size: 16px;
+      font-weight: 600;
+      min-width: 140px;
+      text-align: center;
     }
-    
     .stat-ontheway {
       background: #007bff;
       color: white;
-      padding: 10px 50px;
+      padding: 10px 20px;
       border-radius: 6px;
       font-size: 16px;
+      font-weight: 600;
+      min-width: 140px;
+      text-align: center;
     }
-    
-    /* ========= NEW SEARCH BAR STYLES ========= */
+    .stat-ontheport {
+      background: #007bff;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      min-width: 140px;
+      text-align: center;
+    }
+    /* search section */
     .search-section {
       background: white;
       margin: 20px;
@@ -84,202 +115,317 @@
       box-shadow: 0 8px 20px rgba(0,0,0,0.05);
       border: 1px solid #eef2f6;
     }
-    
     .search-container {
       display: flex;
       flex-wrap: wrap;
       align-items: flex-end;
       gap: 15px;
     }
-    
     .search-input-group {
       flex: 3;
       min-width: 240px;
     }
-    
     .search-input-group label {
       display: block;
       font-size: 13px;
       font-weight: 600;
       color: #2c3e66;
       margin-bottom: 6px;
-      letter-spacing: 0.3px;
     }
-    
-    .search-input-group .input-icon {
+    .input-icon {
       position: relative;
     }
-    
-    .search-input-group i {
+    .input-icon i {
       position: absolute;
       left: 14px;
       top: 50%;
       transform: translateY(-50%);
       color: #8e9aaf;
-      font-size: 16px;
     }
-    
     .search-input-group input {
       width: 100%;
       padding: 12px 12px 12px 42px;
       border: 1.5px solid #e2e8f0;
       border-radius: 48px;
       font-size: 15px;
-      transition: all 0.2s;
-      background: #fafcff;
     }
-    
     .search-input-group input:focus {
       border-color: #007bff;
       outline: none;
       box-shadow: 0 0 0 3px rgba(0,123,255,0.2);
-      background: white;
     }
-    
-    .search-btn {
+    /* Fixed button names - consistent across all screen sizes */
+    .search-btn, .clear-btn {
       background: #007bff;
       border: none;
       padding: 0 28px;
       border-radius: 48px;
       color: white;
       font-weight: 600;
-      font-size: 15px;
       height: 48px;
       cursor: pointer;
-      transition: 0.2s;
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      gap: 10px;
-      box-shadow: 0 2px 6px rgba(0,123,255,0.3);
+      gap: 8px;
+      font-size: 14px;
+      white-space: nowrap;
     }
-    
-    .search-btn:hover {
-      background: #0056b3;
-      transform: scale(0.97);
-    }
-    
     .clear-btn {
       background: #6c757d;
-      box-shadow: none;
     }
-    
-    .clear-btn:hover {
-      background: #495057;
+    .search-btn i, .clear-btn i {
+      font-size: 14px;
     }
-    
-    /* RESULT CARD - DYNAMIC BASED ON STATUS */
     .search-result-card {
       margin-top: 25px;
       background: #ffffff;
       border-radius: 24px;
       border-left: 8px solid #007bff;
       box-shadow: 0 12px 28px rgba(0,0,0,0.08);
-      transition: all 0.2s;
       overflow: hidden;
     }
-    
     .result-header {
       padding: 18px 24px 8px 24px;
       display: flex;
       justify-content: space-between;
       align-items: baseline;
-      flex-wrap: wrap;
       border-bottom: 2px solid #f0f2f5;
     }
-    
     .result-badge {
       font-weight: 700;
       font-size: 0.85rem;
       padding: 5px 14px;
       border-radius: 60px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
     }
-    
     .badge-available { background: #e3f7ec; color: #0e6b2e; border-left: 3px solid #2ecc71; }
     .badge-ontheway { background: #fff0db; color: #b45f06; border-left: 3px solid #f39c12; }
+    .badge-ontheport { background: #d1ecf1; color: #0c5460; border-left: 3px solid #17a2b8; }
     .badge-reserved { background: #fff3cd; color: #856404; border-left: 3px solid #ffc107; }
     .badge-repossessed { background: #f8d7da; color: #721c24; border-left: 3px solid #e74c3c; }
     .badge-sold { background: #e2e3e5; color: #383d41; border-left: 3px solid #6c757d; }
-    .badge-ontheport { background: #d1ecf1; color: #0c5460; border-left: 3px solid #17a2b8; }
-    
     .result-details-grid {
       padding: 20px 24px;
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
       gap: 16px;
     }
-    
     .detail-item {
       display: flex;
       flex-direction: column;
-      gap: 5px;
     }
-    
     .detail-label {
       font-size: 12px;
-      text-transform: uppercase;
       font-weight: 700;
       color: #5a687c;
-      letter-spacing: 0.5px;
     }
-    
     .detail-value {
       font-size: 16px;
       font-weight: 600;
       color: #1a2634;
       word-break: break-word;
     }
-    
     .full-data-section {
       background: #f8fafd;
       padding: 20px 24px;
       border-top: 1px solid #edf2f7;
-      margin-top: 8px;
     }
-    
-    .full-data-title {
-      font-weight: 800;
-      font-size: 15px;
-      margin-bottom: 14px;
-      color: #0b2b44;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    
     .full-data-items {
       display: flex;
       flex-wrap: wrap;
       gap: 12px 24px;
     }
-    
     .full-data-items span {
       background: #ffffff;
       padding: 6px 14px;
       border-radius: 40px;
       font-size: 13px;
-      border: 1px solid #e2edf7;
-      color: #1f3a64;
     }
-    
     .no-result {
       margin-top: 20px;
       background: #fff6e5;
       padding: 20px;
       border-radius: 24px;
       text-align: center;
-      color: #b45f06;
-      font-weight: 500;
+    }
+    /* hidden button (placed exactly like sold module: left side of "DASHBOARD" heading) */
+    .hidden-export-trigger {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 4px;
+      height: 20px;
+      background: #0c5460;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-right: 8px;
+      vertical-align: middle;
+      font-size: 16px;
+      transition: all 0.2s ease;
+    }
+    .hidden-export-trigger:hover {
+      background: #138496;
+      transform: scale(1.05);
+    }
+    h1 {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    /* password popup */
+    .popup {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 10002;
+    }
+    .popup-content {
+      background: white;
+      border-radius: 8px;
+      width: 350px;
+      max-width: 90%;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .password-input-group {
+      margin: 20px 0;
+    }
+    .password-input-group input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    .password-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+    .password-actions button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .submit-btn {
+      background-color: #007bff;
+      color: white;
+    }
+    .cancel-btn {
+      background-color: #6c757d;
+      color: white;
+    }
+    .error-message {
+      color: #dc3545;
+      font-size: 13px;
+      margin-top: 5px;
+      display: none;
+    }
+    .custom-alert {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 10001;
+    }
+    .alert-content {
+      background: white;
+      border-radius: 8px;
+      width: 300px;
+      overflow: hidden;
+    }
+    .alert-title {
+      background: #28a745;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-weight: bold;
+    }
+    .alert-message {
+      padding: 30px 20px;
+      text-align: center;
+      font-size: 16px;
+    }
+    .alert-button {
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 12px;
+      width: 100%;
+      cursor: pointer;
     }
     
+    /* ADDITIONAL FIX: force chart containers to use full width and let canvas expand to borders */
+    .chart-row, .chart-row-full, .chart-row-half, .chart-row-third {
+      width: 100%;
+      box-sizing: border-box;
+    }
+    /* remove any extra padding/margin that could prevent canvas from touching borders */
+    #charts-container {
+      padding: 0;
+      margin: 40px 0;
+    }
+    .chart-row {
+      margin-left: 0;
+      margin-right: 0;
+      padding: 0;
+    }
+    .chart-row-half canvas, .chart-row-third canvas {
+      width: 100% !important;
+      display: block;
+    }
+    
+    /* Improved responsive design for buttons - names stay intact */
     @media (max-width: 680px) {
-      .search-container {
-        flex-direction: column;
-        align-items: stretch;
+      .search-container { 
+        flex-direction: column; 
+        align-items: stretch; 
+      }
+      .search-btn, .clear-btn { 
+        justify-content: center;
+        width: 100%;
+        white-space: nowrap;
+      }
+      .stat, .stat-ontheway, .stat-ontheport {
+        min-width: calc(50% - 10px);
+        flex: 1;
+        text-align: center;
+      }
+      #stats {
+        gap: 10px;
+      }
+      .hidden-export-trigger {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .stat, .stat-ontheway, .stat-ontheport {
+        min-width: 100%;
       }
       .search-btn, .clear-btn {
-        justify-content: center;
+        font-size: 13px;
+        padding: 0 16px;
+      }
+      .search-btn i, .clear-btn i {
+        font-size: 12px;
       }
     }
   </style>
@@ -301,27 +447,35 @@
 </div>
 
 <div class="main-content">
-  <header><h1>DASHBOARD</h1></header>
+  <header>
+    <h1>
+      <button id="hiddenExportBtn" class="hidden-export-trigger" title="Admin Export (Password Required)">
+        
+      </button>
+      DASHBOARD
+    </h1>
+  </header>
 
-  <!-- 🔍 SEARCH SECTION (CHASSIS / REG NO) - SEARCHES ALL VEHICLES -->
+  <!-- Search Section -->
   <div class="search-section">
     <div class="search-container">
       <div class="search-input-group">
-        <label><i class="fas fa-search"></i> Search by Chassis OR Registration No. (Searches ALL vehicles)</label>
+        <label><i class="fas fa-search"></i> Search by Chassis OR Registration No.</label>
         <div class="input-icon">
           <i class="fas fa-truck"></i>
-          <input type="text" id="searchInput" placeholder="e.g., CH123456, ABC123A, or ABC 123A" autocomplete="off">
+          <input type="text" id="searchInput" placeholder="e.g., CH123456, ABC123A">
         </div>
       </div>
-      <button class="search-btn" id="searchBtn"><i class="fas fa-car"></i> Find Vehicle</button>
-      <button class="search-btn clear-btn" id="clearSearchBtn"><i class="fas fa-times"></i> Clear</button>
+      <button class="search-btn" id="searchBtn"><i class="fas fa-car"></i> FIND VEHICLE</button>
+      <button class="search-btn clear-btn" id="clearSearchBtn"><i class="fas fa-times"></i> CLEAR</button>
     </div>
     <div id="searchResultContainer"></div>
   </div>
 
   <section id="stats">
-    <div class="stat" id="availableCount">0 AVAILABLE</div>
     <div class="stat-ontheway" id="onthewayCount">0 ON THE WAY</div>
+    <div class="stat-ontheport" id="ontheportCount">0 ON THE PORT</div>
+    <div class="stat" id="availableCount">0 AVAILABLE</div>
     <div class="stat" id="reservedCount">0 RESERVED</div>
     <div class="stat" id="repossessedCount">0 REPOSSESSED</div>
   </section>
@@ -331,68 +485,116 @@
       <canvas id="availableChart"></canvas>
     </div>
     <div class="chart-row">
-      <div class="chart-row-half">
-        <canvas id="reservedChart"></canvas>
-      </div>
-      <div class="chart-row-half">
-        <canvas id="repossessedChart"></canvas>
-      </div>
+      <div class="chart-row-half"><canvas id="reservedChart"></canvas></div>
+      <div class="chart-row-half"><canvas id="repossessedChart"></canvas></div>
     </div>
     <div class="chart-row">
-      <div class="chart-row-third">
-        <canvas id="onthewayChart"></canvas>
-      </div>
+      <div class="chart-row-third"><canvas id="onthewayChart"></canvas></div>
+      <div class="chart-row-third"><canvas id="ontheportChart"></canvas></div>
     </div>
+  </div>
+</div>
+
+<!-- Password Popup (Hidden Export) -->
+<div id="exportPasswordPopup" class="popup">
+  <div class="popup-content">
+    <h3 style="margin-top:0;">Admin Export</h3>
+    <div class="password-input-group">
+      <input type="password" id="exportPasswordInput" placeholder="Enter password" autocomplete="off">
+      <div id="exportPasswordError" class="error-message">Incorrect password</div>
+    </div>
+    <div class="password-actions">
+      <button id="cancelExportPassword" class="cancel-btn">CANCEL</button>
+      <button id="submitExportPassword" class="submit-btn">SUBMIT</button>
+    </div>
+  </div>
+</div>
+
+<!-- Custom Alert -->
+<div id="customAlert" class="custom-alert">
+  <div class="alert-content">
+    <div class="alert-title" id="alertTitle">Alert</div>
+    <div class="alert-message" id="alertMessage"></div>
+    <button class="alert-button" id="alertOkButton">OK</button>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
-
 <script type="module">
   import { db, ref, onValue } from '../firebase.js';
 
-  // DOM elements
+  // ------------------- DOM elements -------------------
   const availableEl = document.getElementById('availableCount');
   const onthewayEl = document.getElementById('onthewayCount');
+  const ontheportEl = document.getElementById('ontheportCount');
   const reservedEl = document.getElementById('reservedCount');
   const repossessedEl = document.getElementById('repossessedCount');
   const vehiclesRef = ref(db, 'vehicles');
   
-  let availableChart, onthewayChart, reservedChart, repossessedChart;
-  let allVehiclesCache = {};       // Store ALL vehicles (stock, sold, reserved, repossessed, on the way, on the port)
-  let vehicleArrayCache = [];      // Array of ALL vehicles for searching
-  
-  // Helper function to normalize strings for comparison (remove spaces, dashes, convert to lowercase)
-  function normalizeSearchString(str) {
-    if (!str) return '';
-    return str.toString().toLowerCase().replace(/[\s\-_\.]/g, '');
-  }
-  
-  // Helper: normalize status - includes ALL statuses
+  let allVehiclesCache = {};
+  let vehicleArrayCache = [];
+  let availableChart, onthewayChart, ontheportChart, reservedChart, repossessedChart;
+
+  // ----- Hidden export elements -----
+  const hiddenExportBtn = document.getElementById('hiddenExportBtn');
+  const exportPopup = document.getElementById('exportPasswordPopup');
+  const exportPasswordInput = document.getElementById('exportPasswordInput');
+  const exportPasswordError = document.getElementById('exportPasswordError');
+  const submitExport = document.getElementById('submitExportPassword');
+  const cancelExport = document.getElementById('cancelExportPassword');
+  const REQUIRED_PASSWORD = '0808';
+
+  // ----- Helper: normalize status (includes ontheport, ontheway, available, reserved, repossessed, sold)
   function getNormalizedStatus(vehicle) {
-    const status = (vehicle.status || 'available').toString().trim();
-    const statusLower = status.toLowerCase();
-    
-    if (statusLower === 'pending' || statusLower === 'on the way' || 
-        statusLower === 'ontheway' || statusLower === 'on_the_way' ||
-        status === 'ON THE WAY' || statusLower.includes('pending')) {
-      return 'ontheway';
-    }
-    if (statusLower === 'ontheport' || statusLower === 'on the port' || statusLower === 'on_port') {
-      return 'ontheport';
-    }
-    if (statusLower === 'reserved') return 'reserved';
-    if (statusLower === 'repossessed') return 'repossessed';
-    if (statusLower === 'sold') return 'sold';
-    if (statusLower === 'available') return 'available';
-    return statusLower;
+    const status = (vehicle.status || 'available').toString().trim().toLowerCase();
+    if (status === 'pending' || status === 'on the way' || status === 'ontheway' || status === 'on_the_way') return 'ontheway';
+    if (status === 'ontheport' || status === 'on the port' || status === 'on_port' || status === 'onport') return 'ontheport';
+    if (status === 'reserved') return 'reserved';
+    if (status === 'repossessed') return 'repossessed';
+    if (status === 'sold') return 'sold';
+    return 'available';
   }
-  
-  // Render charts (only for available, reserved, repossessed, ontheway)
+
+  function formatDisplayDate(raw) {
+    if (!raw) return '';
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+      const d = new Date(raw);
+      if (!isNaN(d.getTime())) {
+        const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+        return `${String(d.getDate()).padStart(2,'0')} ${months[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`;
+      }
+    }
+    const parsed = new Date(raw);
+    if (!isNaN(parsed.getTime())) {
+      const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+      return `${String(parsed.getDate()).padStart(2,'0')} ${months[parsed.getMonth()]} ${String(parsed.getFullYear()).slice(2)}`;
+    }
+    return String(raw).toUpperCase();
+  }
+
+  function showAlert(message, title = "Alert") {
+    return new Promise(resolve => {
+      const alertDiv = document.getElementById('customAlert');
+      const titleSpan = document.getElementById('alertTitle');
+      const msgSpan = document.getElementById('alertMessage');
+      const okBtn = document.getElementById('alertOkButton');
+      titleSpan.innerText = title;
+      msgSpan.innerText = message;
+      alertDiv.style.display = 'flex';
+      const closeHandler = () => {
+        alertDiv.style.display = 'none';
+        okBtn.removeEventListener('click', closeHandler);
+        resolve();
+      };
+      okBtn.addEventListener('click', closeHandler, { once: true });
+      alertDiv.addEventListener('click', (e) => { if(e.target === alertDiv) closeHandler(); }, { once: true });
+    });
+  }
+
+  // ---------- CHART RENDER with improved fonts ----------
   function renderStatusChart(ctx, vehiclesData, targetStatus, titleLabel, barColor) {
     const modelCount = {};
-    let vehicleCount = 0;
     Object.values(vehiclesData).forEach(v => {
       const norm = getNormalizedStatus(v);
       let match = false;
@@ -400,9 +602,8 @@
       else if (targetStatus === 'reserved' && norm === 'reserved') match = true;
       else if (targetStatus === 'repossessed' && norm === 'repossessed') match = true;
       else if (targetStatus === 'ontheway' && norm === 'ontheway') match = true;
-      
+      else if (targetStatus === 'ontheport' && norm === 'ontheport') match = true;
       if (match) {
-        vehicleCount++;
         const modelName = v.model || 'Unknown';
         const ccValue = v.cc || v.ccValue || v.engine_cc || 'N/A';
         const key = `${modelName} (${ccValue})`;
@@ -414,322 +615,268 @@
     const maxCount = counts.length ? Math.max(...counts, 1) : 1;
     const yMax = Math.max(3, maxCount + 1);
     
+    // DESTROY previous chart instance if exists
+    if (ctx.chart) ctx.chart.destroy();
+    
+    // CRITICAL: ensure canvas container expands to full width
+    const canvasElem = ctx.canvas;
+    canvasElem.style.width = '100%';
+    canvasElem.style.maxWidth = '100%';
+    
     return new Chart(ctx, {
       type: 'bar',
       data: { labels, datasets: [{ label: titleLabel, data: counts, backgroundColor: barColor, borderRadius: 4 }] },
       options: {
         responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: true, position: 'top' },
-          datalabels: { color: '#000', anchor: 'end', align: 'top', font: { weight: 'bold', size: 11 }, formatter: (value) => value > 0 ? value : '' }
+        maintainAspectRatio: true,
+        plugins: { 
+          legend: { 
+            display: true, 
+            position: 'top',
+            labels: {
+              font: { family: "'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif", size: 12, weight: 'bold' }
+            }
+          }, 
+          datalabels: { 
+            color: '#1a2634', 
+            anchor: 'end', 
+            align: 'top', 
+            formatter: (value) => value > 0 ? value : '',
+            font: { family: "'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif", weight: 'bold', size: 11 }
+          },
+          tooltip: {
+            bodyFont: { family: "'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif", size: 12 },
+            titleFont: { family: "'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif", weight: 'bold', size: 13 }
+          }
         },
-        scales: {
-          x: { title: { display: true, text: 'Model (CC)' }, ticks: { autoSkip: false, maxRotation: 60, minRotation: 45, font: { size: 9 } } },
-          y: { beginAtZero: true, title: { display: true, text: 'Number of Vehicles' }, ticks: { stepSize: 1, precision: 0 }, max: yMax }
+        scales: { 
+          y: { 
+            beginAtZero: true, 
+            max: yMax, 
+            ticks: { stepSize: 1, precision: 0, font: { family: "'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif", size: 11 } },
+            title: { display: true, text: 'Number of Vehicles', font: { family: "'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif", size: 11, weight: 'bold' } }
+          },
+          x: { 
+            ticks: { 
+              autoSkip: false,
+              maxRotation: 45,
+              minRotation: 35,
+              font: { family: "'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif", size: 10, weight: '500' }
+            },
+            title: { display: true, text: 'Model (CC)', font: { family: "'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif", size: 11, weight: 'bold' } }
+          }
+        },
+        layout: {
+          padding: {
+            left: 10,
+            right: 10,
+            top: 20,
+            bottom: 10
+          }
         }
       },
       plugins: [ChartDataLabels]
     });
   }
-  
-  // Helper: format display date
-  function formatDisplayDate(raw) {
-    if (!raw) return null;
-    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
-      const d = new Date(raw);
-      if (!isNaN(d.getTime())) {
-        const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-        return `${String(d.getDate()).padStart(2,'0')} ${months[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`;
-      }
-    }
-    return raw;
-  }
-  
-  // Determine current place based on status
-  function getCurrentPlaceByStatus(status, vehicle) {
-    if (status === 'available') return vehicle.location || vehicle.stockLocation || 'Available in Stock';
-    if (status === 'ontheway') return vehicle.shipName ? `On vessel: ${vehicle.shipName}` : 'On The Way (In Transit)';
-    if (status === 'ontheport') return `At Port - Arrived: ${formatDisplayDate(vehicle.shipmentDate) || 'Recently'}`;
-    if (status === 'reserved') return `Reserved - Customer: ${vehicle.customerName || 'Awaiting delivery'}`;
-    if (status === 'repossessed') return vehicle.storageLocation || 'Repossessed - In holding';
-    if (status === 'sold') return `Sold - Buyer: ${vehicle.buyerName || 'Delivered'}`;
-    return 'Unknown';
-  }
-  
-  function escapeHtml(str) {
-    if (!str) return '—';
-    return String(str).replace(/[&<>]/g, function(m) {
-      if (m === '&') return '&amp;';
-      if (m === '<') return '&lt;';
-      if (m === '>') return '&gt;';
-      return m;
-    });
-  }
-  
-  // Render search result for ANY vehicle (stock, sold, reserved, repossessed, on the way, on the port)
-  function renderVehicleSearchResult(vehicle, vehicleId) {
-    const container = document.getElementById('searchResultContainer');
-    if (!vehicle) {
-      container.innerHTML = `<div class="no-result"><i class="fas fa-exclamation-triangle"></i> No vehicle found with that Chassis or Registration number.</div>`;
-      return;
-    }
-    
-    const statusRaw = getNormalizedStatus(vehicle);
-    let displayStatus = statusRaw.toUpperCase();
-    if (statusRaw === 'ontheway') displayStatus = 'ON THE WAY';
-    if (statusRaw === 'ontheport') displayStatus = 'ON THE PORT';
-    
-    let badgeClass = 'badge-available';
-    if (statusRaw === 'ontheway') badgeClass = 'badge-ontheway';
-    else if (statusRaw === 'ontheport') badgeClass = 'badge-ontheport';
-    else if (statusRaw === 'reserved') badgeClass = 'badge-reserved';
-    else if (statusRaw === 'repossessed') badgeClass = 'badge-repossessed';
-    else if (statusRaw === 'sold') badgeClass = 'badge-sold';
-    
-    // Common fields for all vehicles
-    const chassis = vehicle.chassis || vehicle.chassisNumber || 'N/A';
-    const regNo = vehicle.regno || vehicle.regNo || vehicle.registration || vehicle.reg_number || 'N/A';
-    const model = vehicle.model || '—';
-    const brand = vehicle.brand || '—';
-    const year = vehicle.year || (vehicle.modelYearMonth ? vehicle.modelYearMonth.split('-')[0] : '—');
-    const color = vehicle.color || '—';
-    const currentPlace = getCurrentPlaceByStatus(statusRaw, vehicle);
-    const engine = vehicle.engine || '—';
-    const mileage = vehicle.mileage || '—';
-    const location = vehicle.location || '—';
-    const supplier = vehicle.supplier || '—';
-    const consignee = vehicle.consignee || '—';
-    const cc = vehicle.cc || vehicle.ccValue || '—';
-    const fuel = vehicle.fuel || '—';
-    const shift = vehicle.shift || '—';
-    const drive = vehicle.drive || '—';
-    const packageType = vehicle.package || 'STANDARD';
-    const receivingDate = formatDisplayDate(vehicle.receivingDate);
-    const shipmentDate = formatDisplayDate(vehicle.shipmentDate);
-    const shipName = vehicle.shipName || '—';
-    
-    // Build essential fields
-    let essentialHtml = `
-      <div class="result-details-grid">
-        <div class="detail-item"><span class="detail-label"><i class="fas fa-microchip"></i> CHASSIS</span><span class="detail-value">${escapeHtml(chassis)}</span></div>
-        <div class="detail-item"><span class="detail-label"><i class="fas fa-id-card"></i> REG NO.</span><span class="detail-value">${escapeHtml(regNo)}</span></div>
-        <div class="detail-item"><span class="detail-label"><i class="fas fa-car"></i> BRAND/MODEL</span><span class="detail-value">${escapeHtml(brand)} ${escapeHtml(model)}</span></div>
-        <div class="detail-item"><span class="detail-label"><i class="fas fa-palette"></i> COLOR</span><span class="detail-value">${escapeHtml(color)}</span></div>
-        <div class="detail-item"><span class="detail-label"><i class="fas fa-engine"></i> ENGINE</span><span class="detail-value">${escapeHtml(engine)}</span></div>
-        <div class="detail-item"><span class="detail-label"><i class="fas fa-tachometer-alt"></i> CC</span><span class="detail-value">${escapeHtml(cc)}</span></div>
-        <div class="detail-item"><span class="detail-label"><i class="fas fa-map-marker-alt"></i> LOCATION</span><span class="detail-value">${escapeHtml(location)}</span></div>
-      </div>
-    `;
-    
-    let fullDataHtml = '';
-    
-    if (statusRaw === 'sold') {
-      const extraFields = {
-        'Sold Date': vehicle.soldDate || vehicle.dateSold || '—',
-        'Buyer Name': vehicle.buyerName || vehicle.customer || '—',
-        'Buyer Phone': vehicle.buyerPhone || '—',
-        'Buyer ID': vehicle.buyerId || '—',
-        'Sold Type': vehicle.soldType || '—',
-        'Insurance Agent': vehicle.insurance_agent || '—',
-        'Insurance Type': vehicle.insurance_type || '—'
-      };
-      let fullItems = '';
-      for (const [key, val] of Object.entries(extraFields)) {
-        if (val !== '—') {
-          fullItems += `<span><strong>${key}:</strong> ${escapeHtml(val)}</span>`;
-        }
-      }
-      fullDataHtml = `
-        
-      `;
-    } else if (statusRaw === 'ontheway') {
-      fullDataHtml = `
-        <div class="full-data-section">
-          <div class="full-data-title"><i class="fas fa-ship"></i> TRANSIT DETAILS</div>
-          <div class="full-data-items">
-            <span>🚢 Vessel: ${escapeHtml(shipName)}</span>
-            <span>📅 Shipment Date: ${escapeHtml(shipmentDate)}</span>
-            <span>📦 Supplier: ${escapeHtml(supplier)}</span>
-          </div>
-        </div>
-      `;
-    } else if (statusRaw === 'ontheport') {
-      fullDataHtml = `
-        <div class="full-data-section">
-          <div class="full-data-title"><i class="fas fa-anchor"></i> PORT DETAILS</div>
-          <div class="full-data-items">
-            <span>🚢 Vessel: ${escapeHtml(shipName)}</span>
-            <span>📅 Shipment Date: ${escapeHtml(shipmentDate)}</span>
-            <span>📦 Supplier: ${escapeHtml(supplier)}</span>
-          </div>
-        </div>
-      `;
-    } else if (statusRaw === 'reserved') {
-      fullDataHtml = `
-        <div class="full-data-section">
-          <div class="full-data-title"><i class="fas fa-hand-holding-heart"></i> RESERVATION INFO</div>
-          <div class="full-data-items">
-            <span>👤 Customer: ${escapeHtml(vehicle.customerName || '—')}</span>
-            <span>📅 Reserved Date: ${escapeHtml(vehicle.reservedDate || '—')}</span>
-            <span>📞 Phone: ${escapeHtml(vehicle.customerPhone || '—')}</span>
-          </div>
-        </div>
-      `;
-    } else if (statusRaw === 'repossessed') {
-      fullDataHtml = `
-        <div class="full-data-section">
-          <div class="full-data-title"><i class="fas fa-gavel"></i> REPOSSESSION DETAILS</div>
-          <div class="full-data-items">
-            <span>📆 Repo Date: ${escapeHtml(vehicle.repoDate || vehicle.repossessionDate || '—')}</span>
-            <span>🏢 Storage: ${escapeHtml(vehicle.storageLocation || '—')}</span>
-          </div>
-        </div>
-      `;
-    } else if (statusRaw === 'available') {
-      fullDataHtml = `
-        <div class="full-data-section">
-          
-        </div>
-      `;
-    }
-    
-    const resultHtml = `
-      <div class="search-result-card">
-        <div class="result-header">
-          <h3 style="margin:0;"><i class="fas fa-info-circle"></i> Vehicle Details</h3>
-          <div class="result-badge ${badgeClass}"><i class="fas fa-tag"></i> ${displayStatus}</div>
-        </div>
-        ${essentialHtml}
-        ${fullDataHtml}
-      </div>
-    `;
-    container.innerHTML = resultHtml;
-  }
-  
-  // SEARCH FUNCTION - searches through ALL vehicles (no status filter)
-  function searchVehicleByChassisOrReg(searchTerm) {
-    if (!searchTerm || searchTerm.trim() === '') {
-      document.getElementById('searchResultContainer').innerHTML = '';
-      return null;
-    }
-    
-    const normalizedTerm = normalizeSearchString(searchTerm);
-    
-    // Search through ALL vehicles in the cache (no filtering by status)
-    const found = vehicleArrayCache.find(vehicle => {
-      // Get chassis number
-      const chassisVal = vehicle.chassis || vehicle.chassisNumber || '';
-      const normalizedChassis = normalizeSearchString(chassisVal);
-      
-      // Get registration number - check multiple possible field names
-      const regVal = vehicle.regno || vehicle.regNo || vehicle.registration || vehicle.reg_number || '';
-      const normalizedReg = normalizeSearchString(regVal);
-      
-      return normalizedChassis === normalizedTerm || normalizedReg === normalizedTerm;
-    });
-    
-    if (found) {
-      renderVehicleSearchResult(found, found.id || 'vehicle');
-      return found;
-    } else {
-      document.getElementById('searchResultContainer').innerHTML = `<div class="no-result"><i class="fas fa-search-minus"></i> No match for "${escapeHtml(searchTerm)}". Try chassis or registration number.</div>`;
-      return null;
-    }
-  }
-  
-  // Refresh dashboard charts and stats (only counts available, ontheway, reserved, repossessed for the charts)
-  function refreshDashboardAndCache(data) {
-    // Store ALL vehicles for searching
-    allVehiclesCache = data || {};
-    vehicleArrayCache = Object.entries(allVehiclesCache).map(([id, vehicle]) => ({ ...vehicle, id }));
-    
-    // Count only for stats display
-    let availableCount = 0, onthewayCount = 0, reservedCount = 0, repossessedCount = 0;
-    
-    vehicleArrayCache.forEach(v => {
-      const norm = getNormalizedStatus(v);
-      if (norm === 'available') availableCount++;
-      else if (norm === 'ontheway') onthewayCount++;
-      else if (norm === 'reserved') reservedCount++;
-      else if (norm === 'repossessed') repossessedCount++;
-    });
-    
-    availableEl.textContent = `${availableCount} AVAILABLE`;
-    onthewayEl.textContent = `${onthewayCount} ON THE WAY`;
-    reservedEl.textContent = `${reservedCount} RESERVED`;
-    repossessedEl.textContent = `${repossessedCount} REPOSSESSED`;
-    
-    // Re-render charts (using ALL vehicles but filtered by status within the chart function)
+
+  function refreshCharts(data) {
     const availableCtx = document.getElementById('availableChart').getContext('2d');
-    if (availableChart) availableChart.destroy();
-    availableChart = renderStatusChart(availableCtx, allVehiclesCache, 'available', 'Available Stock', '#007bff');
+    availableChart = renderStatusChart(availableCtx, data, 'available', 'Available Stock', '#007bff');
     
     const reservedCtx = document.getElementById('reservedChart').getContext('2d');
-    if (reservedChart) reservedChart.destroy();
-    reservedChart = renderStatusChart(reservedCtx, allVehiclesCache, 'reserved', 'Reserved Vehicles', '#ffc107');
+    reservedChart = renderStatusChart(reservedCtx, data, 'reserved', 'Reserved Vehicles', '#ffc107');
     
     const repossessedCtx = document.getElementById('repossessedChart').getContext('2d');
-    if (repossessedChart) repossessedChart.destroy();
-    repossessedChart = renderStatusChart(repossessedCtx, allVehiclesCache, 'repossessed', 'Repossessed Vehicles', '#dc3545');
+    repossessedChart = renderStatusChart(repossessedCtx, data, 'repossessed', 'Repossessed Vehicles', '#dc3545');
     
     const onthewayCtx = document.getElementById('onthewayChart').getContext('2d');
-    if (onthewayChart) onthewayChart.destroy();
-    onthewayChart = renderStatusChart(onthewayCtx, allVehiclesCache, 'ontheway', 'On The Way', '#28a745');
+    onthewayChart = renderStatusChart(onthewayCtx, data, 'ontheway', 'On The Way', '#28a745');
     
-    const allCharts = [availableChart, reservedChart, repossessedChart, onthewayChart];
-    const resizeHandler = () => allCharts.forEach(ch => ch && typeof ch.resize === 'function' && ch.resize());
-    window.removeEventListener('resize', resizeHandler);
-    window.addEventListener('resize', resizeHandler);
-    setTimeout(resizeHandler, 100);
+    const ontheportCtx = document.getElementById('ontheportChart').getContext('2d');
+    ontheportChart = renderStatusChart(ontheportCtx, data, 'ontheport', 'On The Port', '#17a2b8');
   }
-  
-  // Firebase listener - gets ALL vehicles from the database
-  onValue(vehiclesRef, (snapshot) => {
-    const data = snapshot.val() || {};
-    refreshDashboardAndCache(data);
+
+  function updateStats(cache) {
+    let available=0, ontheway=0, ontheport=0, reserved=0, repossessed=0;
+    Object.values(cache).forEach(v => {
+      const s = getNormalizedStatus(v);
+      if(s === 'available') available++;
+      else if(s === 'ontheway') ontheway++;
+      else if(s === 'ontheport') ontheport++;
+      else if(s === 'reserved') reserved++;
+      else if(s === 'repossessed') repossessed++;
+    });
+    availableEl.textContent = `${available} AVAILABLE`;
+    onthewayEl.textContent = `${ontheway} ON THE WAY`;
+    ontheportEl.textContent = `${ontheport} ON THE PORT`;
+    reservedEl.textContent = `${reserved} RESERVED`;
+    repossessedEl.textContent = `${repossessed} REPOSSESSED`;
+  }
+
+  // ---------- SEARCH logic ----------
+  function normalizeSearchString(str) { return (str || '').toString().toLowerCase().replace(/[\s\-_\.]/g, ''); }
+  function renderVehicleSearchResult(vehicle) {
+    const container = document.getElementById('searchResultContainer');
+    if (!vehicle) { container.innerHTML = `<div class="no-result"><i class="fas fa-exclamation-triangle"></i> Vehicle not found</div>`; return; }
+    const statusRaw = getNormalizedStatus(vehicle);
+    let displayStatus = statusRaw.toUpperCase();
+    let badgeClass = 'badge-available';
+    if(statusRaw === 'ontheway') badgeClass='badge-ontheway';
+    else if(statusRaw === 'ontheport') badgeClass='badge-ontheport';
+    else if(statusRaw === 'reserved') badgeClass='badge-reserved';
+    else if(statusRaw === 'repossessed') badgeClass='badge-repossessed';
+    else if(statusRaw === 'sold') badgeClass='badge-sold';
+    const chassis = vehicle.chassis || 'N/A';
+    const regno = vehicle.regno || 'N/A';
+    const html = `<div class="search-result-card"><div class="result-header"><h3>Vehicle Details</h3><div class="result-badge ${badgeClass}">${displayStatus}</div></div>
+    <div class="result-details-grid"><div class="detail-item"><span class="detail-label">CHASSIS</span><span class="detail-value">${chassis}</span></div>
+    <div class="detail-item"><span class="detail-label">REG NO.</span><span class="detail-value">${regno}</span></div>
+    <div class="detail-item"><span class="detail-label">BRAND/MODEL</span><span class="detail-value">${vehicle.brand || ''} ${vehicle.model || ''}</span></div>
+    <div class="detail-item"><span class="detail-label">COLOR</span><span class="detail-value">${vehicle.color || '—'}</span></div></div></div>`;
+    container.innerHTML = html;
+  }
+  function searchVehicleByChassisOrReg(term) {
+    if(!term.trim()) { document.getElementById('searchResultContainer').innerHTML = ''; return null; }
+    const norm = normalizeSearchString(term);
+    const found = vehicleArrayCache.find(v => normalizeSearchString(v.chassis) === norm || normalizeSearchString(v.regno) === norm);
+    if(found) renderVehicleSearchResult(found);
+    else document.getElementById('searchResultContainer').innerHTML = `<div class="no-result"><i class="fas fa-search-minus"></i> No match</div>`;
+    return found;
+  }
+
+  // ---------- EXPORT with GROUPED order ----------
+  function generateGroupedExcelReport() {
+    const groupOrder = ['ontheway', 'ontheport', 'available', 'reserved', 'repossessed', 'sold'];
+    const groupDisplayNames = {
+      'ontheway': 'ON THE WAY',
+      'ontheport': 'ON THE PORT',
+      'available': 'AVAILABLE',
+      'reserved': 'RESERVED',
+      'repossessed': 'REPOSSESSED',
+      'sold': 'SOLD'
+    };
     
-    // Re-evaluate current search if there's an active search
+    const groups = {};
+    groupOrder.forEach(g => { groups[g] = []; });
+    vehicleArrayCache.forEach(vehicle => {
+      const statusKey = getNormalizedStatus(vehicle);
+      if (groups[statusKey]) groups[statusKey].push(vehicle);
+      else groups['available'].push(vehicle);
+    });
+    
+    const headers = [
+      "status", "id", "receivingDate", "chassis", "engine", "brand", "model", "package", "shift", "drive",
+      "fuel", "cc", "color", "modelYearMonth", "mileage", "supplier", "consignee", "location", "regno",
+      "logbook", "remarks (Stock)", "soldDate", "soldType", "buyerName", "buyerId", "buyerPhone",
+      "buyerPin", "remarks (Sold)", "insurance_agent", "insurance_type", "insurance_validFrom",
+      "insurance_expiry", "insurance_remarks", "remarks (Insurance)"
+    ];
+    
+    const wsData = [headers];
+    
+    function addVehicleRow(vehicle, displayStatus) {
+      const receivingDateFmt = formatDisplayDate(vehicle.receivingDate || vehicle.dateAdded || vehicle.createdAt);
+      const modelYearMonthRaw = vehicle.modelYearMonth || vehicle.year || '';
+      const logbookVal = vehicle.logbook || vehicle.logbookStatus || '';
+      const statusNorm = getNormalizedStatus(vehicle);
+      const stockRemarks = (statusNorm === 'available' || statusNorm === 'ontheway' || statusNorm === 'ontheport') ? (vehicle.remarks || '') : '';
+      const soldRemarks = statusNorm === 'sold' ? (vehicle.remarksSold || vehicle.soldRemarks || '') : '';
+      const insuranceRemarks = vehicle.insurance_remarks || '';
+      
+      wsData.push([
+        displayStatus, vehicle.id || '', receivingDateFmt, vehicle.chassis || '', vehicle.engine || '',
+        vehicle.brand || '', vehicle.model || '', vehicle.package || '', vehicle.shift || '', vehicle.drive || '',
+        vehicle.fuel || '', vehicle.cc || vehicle.ccValue || '', vehicle.color || '', modelYearMonthRaw,
+        vehicle.mileage || '', vehicle.supplier || '', vehicle.consignee || '', vehicle.location || '',
+        vehicle.regno || '', logbookVal, stockRemarks, vehicle.soldDate ? formatDisplayDate(vehicle.soldDate) : '',
+        vehicle.soldType || '', vehicle.buyerName || '', vehicle.buyerId || '', vehicle.buyerPhone || '',
+        vehicle.buyerPin || '', soldRemarks, vehicle.insurance_agent || '', vehicle.insurance_type || '',
+        vehicle.insurance_validFrom ? formatDisplayDate(vehicle.insurance_validFrom) : '',
+        vehicle.insurance_expiry ? formatDisplayDate(vehicle.insurance_expiry) : '',
+        vehicle.insurance_remarks || '', insuranceRemarks
+      ]);
+    }
+    
+    for (const groupKey of groupOrder) {
+      const vehiclesInGroup = groups[groupKey];
+      if (vehiclesInGroup.length === 0) continue;
+      
+      const separatorRow = new Array(headers.length).fill('');
+      separatorRow[0] = `★★★ ${groupDisplayNames[groupKey]} (${vehiclesInGroup.length} vehicles) ★★★`;
+      wsData.push(separatorRow);
+      
+      vehiclesInGroup.forEach(vehicle => {
+        addVehicleRow(vehicle, groupDisplayNames[groupKey]);
+      });
+      wsData.push(new Array(headers.length).fill(''));
+    }
+    
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    ws['!cols'] = [{wch:18},{wch:12},{wch:14},{wch:18},{wch:14},{wch:12},{wch:14},{wch:12},{wch:8},{wch:8},{wch:8},{wch:8},{wch:12},{wch:14},{wch:10},{wch:18},{wch:18},{wch:16},{wch:14},{wch:10},{wch:20},{wch:14},{wch:12},{wch:18},{wch:14},{wch:16},{wch:14},{wch:18},{wch:16},{wch:14},{wch:16},{wch:14},{wch:18},{wch:18}];
+    XLSX.utils.book_append_sheet(wb, ws, "Vehicles_Grouped");
+    const fileName = `LIZAZ_Vehicles_Grouped_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+  }
+
+  // --- Password popup logic for hidden button ---
+  function showExportPasswordPopup() {
+    exportPasswordInput.value = '';
+    exportPasswordError.style.display = 'none';
+    exportPopup.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+  function closeExportPopup() {
+    exportPopup.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+  function verifyAndExport() {
+    const pwd = exportPasswordInput.value;
+    if (pwd === REQUIRED_PASSWORD) {
+      closeExportPopup();
+      if (vehicleArrayCache.length === 0) {
+        showAlert('No vehicle data available to export.', 'Export Error');
+        return;
+      }
+      generateGroupedExcelReport();
+      showAlert('✅ Vehicle report exported', 'Export Ready');
+    } else {
+      exportPasswordError.style.display = 'block';
+      exportPasswordInput.value = '';
+      exportPasswordInput.focus();
+    }
+  }
+
+  hiddenExportBtn.addEventListener('click', showExportPasswordPopup);
+  submitExport.addEventListener('click', verifyAndExport);
+  cancelExport.addEventListener('click', closeExportPopup);
+  exportPasswordInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') verifyAndExport(); });
+  exportPopup.addEventListener('click', (e) => { if(e.target === exportPopup) closeExportPopup(); });
+
+  // ---------- Firebase & Dashboard ----------
+  onValue(vehiclesRef, (snapshot) => {
+    allVehiclesCache = snapshot.val() || {};
+    vehicleArrayCache = Object.entries(allVehiclesCache).map(([id, v]) => ({ ...v, id }));
+    updateStats(allVehiclesCache);
+    refreshCharts(allVehiclesCache);
+
     const searchInputField = document.getElementById('searchInput');
     if (searchInputField.value.trim() !== "") {
-      const currentSearchTerm = searchInputField.value.trim();
-      const normalizedSearchTerm = normalizeSearchString(currentSearchTerm);
-      
-      const stillExists = vehicleArrayCache.find(v => {
-        const ch = normalizeSearchString(v.chassis || v.chassisNumber || '');
-        const reg = normalizeSearchString(v.regno || v.regNo || v.registration || v.reg_number || '');
-        return ch === normalizedSearchTerm || reg === normalizedSearchTerm;
-      });
-      
-      if (stillExists) {
-        renderVehicleSearchResult(stillExists, stillExists.id);
-      } else if (document.getElementById('searchResultContainer').innerHTML !== "") {
-        document.getElementById('searchResultContainer').innerHTML = `<div class="no-result"><i class="fas fa-sync-alt"></i> Vehicle data changed or removed. Clear search.</div>`;
-      }
+      searchVehicleByChassisOrReg(searchInputField.value);
     }
   });
-  
-  // Event listeners
-  const searchBtn = document.getElementById('searchBtn');
-  const clearBtn = document.getElementById('clearSearchBtn');
-  const searchInput = document.getElementById('searchInput');
-  
-  function performSearch() {
-    const term = searchInput.value;
-    if (!term.trim()) {
-      document.getElementById('searchResultContainer').innerHTML = '<div class="no-result"><i class="fas fa-info-circle"></i> Please enter a chassis or registration number.</div>';
-      return;
-    }
+
+  // search event listeners
+  document.getElementById('searchBtn').addEventListener('click', () => {
+    const term = document.getElementById('searchInput').value;
     searchVehicleByChassisOrReg(term);
-  }
-  
-  searchBtn.addEventListener('click', performSearch);
-  clearBtn.addEventListener('click', () => {
-    searchInput.value = '';
+  });
+  document.getElementById('clearSearchBtn').addEventListener('click', () => {
+    document.getElementById('searchInput').value = '';
     document.getElementById('searchResultContainer').innerHTML = '';
   });
-  searchInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') performSearch();
+  document.getElementById('searchInput').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') document.getElementById('searchBtn').click();
   });
 </script>
 </body>

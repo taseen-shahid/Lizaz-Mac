@@ -1040,19 +1040,30 @@
         } catch (error) { console.error('Error updating ship name:', error); await showAlert('Error updating ship name. Please try again.', 'Error'); }
       }
 
-      function renderList() {
-        onThePortList.innerHTML = '';
-        let filteredVehicles = Object.values(vehiclesData || {});
-        if (currentSupplierFilter) filteredVehicles = filteredVehicles.filter(v => v && (v.supplier || '').toString().trim().toUpperCase() === currentSupplierFilter);
-        if (currentShipFilter) filteredVehicles = filteredVehicles.filter(v => v && (v.shipName || '').toString().trim().toUpperCase() === currentShipFilter);
+      // Helper function to get filtered vehicles based on current filters
+      function getFilteredVehicles() {
+        let filtered = Object.values(vehiclesData || {});
+        if (currentSupplierFilter) {
+          filtered = filtered.filter(v => v && (v.supplier || '').toString().trim().toUpperCase() === currentSupplierFilter);
+        }
+        if (currentShipFilter) {
+          filtered = filtered.filter(v => v && (v.shipName || '').toString().trim().toUpperCase() === currentShipFilter);
+        }
         if (searchQuery) {
           const searchTerms = searchQuery.split('+').map(term => term.trim().toLowerCase()).filter(term => term.length > 0);
-          filteredVehicles = filteredVehicles.filter(v => {
+          filtered = filtered.filter(v => {
             const searchableFields = [v.brand, v.model, v.supplier, v.shipName, v.chassis, v.color, v.modelYearMonth, v.package, v.id, v.status, v.shipmentDate];
             const searchableText = searchableFields.map(field => String(field || '').toLowerCase()).join(' ');
             return searchTerms.every(term => searchableText.includes(term));
           });
         }
+        return filtered;
+      }
+
+      function renderList() {
+        onThePortList.innerHTML = '';
+        let filteredVehicles = getFilteredVehicles();
+        
         filteredVehicles.sort((a, b) => { const modelA = (a.model || '').toUpperCase(); const modelB = (b.model || '').toUpperCase(); return modelA < modelB ? -1 : modelA > modelB ? 1 : 0; });
         stockCount.textContent = `(${filteredVehicles.length})`;
         updateActiveFiltersDisplay();
@@ -1153,13 +1164,54 @@
       });
 
       document.getElementById("closePopupBtn").addEventListener("click", () => { vehicleFormPopup.style.display = 'none'; pendingVehicleToMove = null; pendingVehicleId = null; completeVehicleForm.reset(); });
+      
+      // UPDATED DOWNLOAD BUTTON: Downloads ONLY filtered vehicles based on current supplier, ship, and search filters
       document.getElementById("downloadBtn").addEventListener("click", () => {
-        const vehicles = Object.values(vehiclesData || {});
-        const sortedVehicles = [...vehicles].sort((a, b) => { const dateA = a.shipmentDate || ''; const dateB = b.shipmentDate || ''; if (dateA !== dateB) return dateA.localeCompare(dateB); const vesselA = (a.shipName || '').toUpperCase(); const vesselB = (b.shipName || '').toUpperCase(); return vesselA.localeCompare(vesselB); });
+        const filteredVehicles = getFilteredVehicles();
+        
+        if (filteredVehicles.length === 0) {
+          showAlert('No vehicles match the current filters. Nothing to download.', 'No Data');
+          return;
+        }
+        
+        const sortedVehicles = [...filteredVehicles].sort((a, b) => { 
+          const dateA = a.shipmentDate || ''; 
+          const dateB = b.shipmentDate || ''; 
+          if (dateA !== dateB) return dateA.localeCompare(dateB); 
+          const vesselA = (a.shipName || '').toUpperCase(); 
+          const vesselB = (b.shipName || '').toUpperCase(); 
+          return vesselA.localeCompare(vesselB); 
+        });
+        
         const wsData = [["SHIPMENT DATE", "VESSEL", "NO.", "NAME", "MODEL", "CHASSIS", "YEAR", "COLOR"]];
-        sortedVehicles.forEach(v => { wsData.push([ v.shipmentDate ? formatDateForExcel(v.shipmentDate) : '', (v.shipName || '').toUpperCase(), (v.id || v.vehicleId || '').toString(), (v.brand || '').toUpperCase(), (v.model || '').toUpperCase(), v.chassis || '', v.modelYearMonth ? v.modelYearMonth.split('-')[0] : '', (v.color || '').toUpperCase() ]); });
-        const wb = XLSX.utils.book_new(); const ws = XLSX.utils.aoa_to_sheet(wsData); ws['!cols'] = [{ wch: 12 }, { wch: 25 }, { wch: 10 }, { wch: 15 }, { wch: 20 }, { wch: 18 }, { wch: 8 }, { wch: 12 }]; XLSX.utils.book_append_sheet(wb, ws, "OnThePort"); XLSX.writeFile(wb, `OnThePort_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
+        sortedVehicles.forEach(v => { 
+          wsData.push([ 
+            v.shipmentDate ? formatDateForExcel(v.shipmentDate) : '', 
+            (v.shipName || '').toUpperCase(), 
+            (v.id || v.vehicleId || '').toString(), 
+            (v.brand || '').toUpperCase(), 
+            (v.model || '').toUpperCase(), 
+            v.chassis || '', 
+            v.modelYearMonth ? v.modelYearMonth.split('-')[0] : '', 
+            (v.color || '').toUpperCase() 
+          ]); 
+        });
+        
+        const wb = XLSX.utils.book_new(); 
+        const ws = XLSX.utils.aoa_to_sheet(wsData); 
+        ws['!cols'] = [{ wch: 12 }, { wch: 25 }, { wch: 10 }, { wch: 15 }, { wch: 20 }, { wch: 18 }, { wch: 8 }, { wch: 12 }]; 
+        XLSX.utils.book_append_sheet(wb, ws, "OnThePort"); 
+        
+        // Build filename with filter indicators for clarity
+        let filterSuffix = '';
+        if (currentSupplierFilter) filterSuffix += `_${currentSupplierFilter}`;
+        if (currentShipFilter) filterSuffix += `_${currentShipFilter}`;
+        if (searchQuery) filterSuffix += `_filtered`;
+        XLSX.writeFile(wb, `OnThePort_Report${filterSuffix}_${new Date().toISOString().split('T')[0]}.xlsx`);
+        
+        showAlert(`Downloaded ${filteredVehicles.length} vehicle(s) matching current filters.`, 'Download Complete');
       });
+      
       clearAllFilters.addEventListener('click', () => { currentSupplierFilter = ''; currentShipFilter = ''; searchQuery = ''; searchBar.value = ''; clearSearch.style.display = 'none'; renderSupplierButtons(); renderShipNameButtons(); renderList(); });
       loadEssentialData();
       fetchVehicles();
